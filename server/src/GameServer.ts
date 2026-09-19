@@ -7,8 +7,7 @@ import {
   type ServerErrorCode,
   type ServerMessage
 } from '@shared/protocol'
-import { isCategory } from '@shared/yahtzee/categories'
-import { calculateFinalScores } from '@shared/yahtzee/engine'
+import { DEFAULT_GAME_ID, isKnownGame } from '@shared/games/registry'
 import { Room } from './Room'
 import { generateUniqueRoomCode, normalizeCode } from './roomCode'
 
@@ -78,18 +77,8 @@ export class GameServer {
         return this.onLeaveRoom(client)
       case 'start_game':
         return this.onStartGame(client)
-      case 'roll_dice':
-        return this.onGameAction(client, { kind: 'roll' })
-      case 'keep_die':
-        if (typeof msg.index !== 'number') {
-          return this.sendError(client.socket, 'INVALID_ACTION', 'A die index is required.')
-        }
-        return this.onGameAction(client, { kind: 'keep', index: msg.index })
-      case 'submit_score':
-        if (!isCategory(msg.category)) {
-          return this.sendError(client.socket, 'INVALID_ACTION', 'Unknown scoring category.')
-        }
-        return this.onGameAction(client, { kind: 'score', category: msg.category })
+      case 'game_action':
+        return this.onGameAction(client, msg.action)
       case 'return_to_lobby':
         return this.onReturnToLobby(client)
       default:
@@ -112,8 +101,9 @@ export class GameServer {
     // Leave any existing room first.
     if (client.roomCode) this.onLeaveRoom(client)
 
+    const requestedGame = typeof gameId === 'string' && isKnownGame(gameId) ? gameId : DEFAULT_GAME_ID
     const code = generateUniqueRoomCode(new Set(this.rooms.keys()))
-    const room = new Room(code, typeof gameId === 'string' && gameId ? gameId : 'yahtzee')
+    const room = new Room(code, requestedGame)
     this.rooms.set(code, room)
 
     const playerId = randomUUID()
@@ -188,20 +178,21 @@ export class GameServer {
       return this.sendError(
         client.socket,
         'NOT_ENOUGH_PLAYERS',
-        'At least 2 players are required to start.'
+        `${room.minPlayers} players are required to start.`
       )
     }
     room.startGame()
     this.broadcastState(room)
   }
 
-  private onGameAction(
-    client: ClientState,
-    action: Parameters<Room['applyAction']>[1]
-  ): void {
+  private onGameAction(client: ClientState, rawAction: unknown): void {
     const room = this.getRoom(client)
     if (!room || !client.playerId) {
       return this.sendError(client.socket, 'NOT_IN_ROOM', 'You are not in a room.')
+    }
+    const action = room.validateAction(rawAction)
+    if (action === null) {
+      return this.sendError(client.socket, 'INVALID_ACTION', 'That move is not allowed.')
     }
     const result = room.applyAction(client.playerId, action)
     if (!result.ok) {
@@ -223,24 +214,33 @@ export class GameServer {
     this.broadcastState(room)
   }
 
-  /** Broadcast the appropriate authoritative state for a room's current phase. */
+  /**
+   * Broadcast the appropriate state for a room's current phase. During a game,
+   * each player receives their OWN sanitized view — hidden information is never
+   * sent to a client that is not allowed to see it.
+   */
   private broadcastState(room: Room): void {
     if (room.isEmpty) {
       this.rooms.delete(room.code)
       return
     }
     const roomState = room.toRoomState()
-    const game = room.getGame()
-    if (game && room.status !== 'lobby') {
-      if (room.status === 'finished') {
-        room.broadcast({
-          type: 'game_over',
-          room: roomState,
-          game,
-          results: calculateFinalScores(game)
-        })
-      } else {
-        room.broadcast({ type: 'game_state', room: roomState, game })
+    if (room.hasGame() && room.status !== 'lobby') {
+      const finished = room.status === 'finished'
+      const results = finished ? room.getResults() : null
+      for (const playerId of room.playerIds) {
+        const view = room.getPlayerView(playerId)
+        if (finished) {
+          room.send(playerId, {
+            type: 'game_over',
+            room: roomState,
+            gameId: room.gameId,
+            view,
+            results
+          })
+        } else {
+          room.send(playerId, { type: 'game_state', room: roomState, gameId: room.gameId, view })
+        }
       }
     } else {
       room.broadcast({ type: 'room_update', room: roomState })

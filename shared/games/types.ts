@@ -1,0 +1,54 @@
+/**
+ * Game-agnostic engine abstraction.
+ *
+ * The multiplayer core (rooms, sockets, dispatch) knows nothing about any
+ * specific game. Each game implements a {@link GameEngine} and registers it in
+ * `registry.ts`, providing:
+ *   - initial state creation
+ *   - client action validation
+ *   - an authoritative action reducer
+ *   - player-specific (sanitized) state serialization
+ *   - disconnect handling
+ *   - win/results reporting
+ *
+ * Keeping these behind one interface means new games never require `if (gameId
+ * === 'x')` branches scattered through the server or client.
+ */
+
+export type ActionErrorCode = 'NOT_YOUR_TURN' | 'INVALID_ACTION' | 'GAME_OVER'
+
+export type EngineActionResult<S> =
+  | { ok: true; state: S }
+  | { ok: false; code: ActionErrorCode; message: string }
+
+/**
+ * @typeParam S - authoritative server state (may contain hidden information)
+ * @typeParam V - per-player client view (safe to send to that player)
+ * @typeParam A - validated action type
+ * @typeParam R - final results payload
+ */
+export interface GameEngine<S = unknown, V = unknown, A = unknown, R = unknown> {
+  readonly id: string
+  readonly minPlayers: number
+  readonly maxPlayers: number
+
+  /** Build the initial authoritative state for an ordered list of player ids. */
+  createGame(playerOrder: string[]): S
+
+  /** Parse/validate an untrusted client action. Returns null if invalid. */
+  validateAction(raw: unknown): A | null
+
+  /** Apply a validated action for a player, returning the next state or an error. */
+  applyAction(state: S, playerId: string, action: A): EngineActionResult<S>
+
+  /** Adjust state when a player leaves mid-game. Returns null if no game remains. */
+  removePlayer(state: S, playerId: string): S | null
+
+  /** Convert authoritative state into the safe view for one specific player. */
+  getPlayerView(state: S, playerId: string): V
+
+  isFinished(state: S): boolean
+
+  /** Final results payload, broadcast once the game finishes. */
+  getResults(state: S): R
+}

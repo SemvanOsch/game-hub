@@ -2,7 +2,7 @@ import type { GameDefinition } from '../games/registry'
 import { Panel } from '../components/Panel'
 import { Button } from '../components/Button'
 
-interface YahtzeeMenuProps {
+interface GameMenuProps {
   game: GameDefinition
   connecting: boolean
   onHost: () => void
@@ -10,7 +10,8 @@ interface YahtzeeMenuProps {
   onBack: () => void
 }
 
-export function YahtzeeMenu({ game, connecting, onHost, onJoin, onBack }: YahtzeeMenuProps) {
+/** Host/Join menu for any registry game. Driven entirely by the game definition. */
+export function GameMenu({ game, connecting, onHost, onJoin, onBack }: GameMenuProps) {
   return (
     <Panel
       title={game.name}
