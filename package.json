@@ -1,6 +1,6 @@
 {
   "name": "game-hub",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Game Hub — a desktop multiplayer game hub built with React, TypeScript and Electron. First game: Yahtzee.",
   "author": "",
   "license": "MIT",
