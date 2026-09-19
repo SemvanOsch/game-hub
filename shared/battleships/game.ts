@@ -66,5 +66,6 @@ export const battleshipsEngine: GameEngine<
   removePlayer: removePlayerFromGame,
   getPlayerView,
   isFinished: (state) => state.status === 'finished',
-  getResults
+  getResults,
+  getWinnerIds: (state) => (state.winnerId ? [state.winnerId] : [])
 }

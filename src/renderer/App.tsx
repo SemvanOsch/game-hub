@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useProfileStore } from './store/profileStore'
+import { useAuthStore } from './store/authStore'
 import { selectIsHost, useMultiplayerStore } from './store/multiplayerStore'
 import type { GameDefinition } from './games/registry'
 import { getGameUI } from './games/ui'
@@ -11,13 +12,16 @@ import { HomeScreen } from './screens/HomeScreen'
 import { GameMenu } from './screens/GameMenu'
 import { JoinScreen } from './screens/JoinScreen'
 import { LobbyScreen } from './screens/LobbyScreen'
+import { FriendsScreen } from './screens/FriendsScreen'
 import styles from './App.module.css'
 
-type LauncherView = 'home' | 'menu' | 'join'
+type LauncherView = 'home' | 'menu' | 'join' | 'friends'
 
 export function App() {
   const name = useProfileStore((s) => s.name)
   const hasName = useProfileStore((s) => s.hasName)
+  const session = useAuthStore((s) => s.session)
+  const resume = useAuthStore((s) => s.resume)
 
   const store = useMultiplayerStore()
   const isHost = useMultiplayerStore(selectIsHost)
@@ -25,6 +29,13 @@ export function App() {
   const [view, setView] = useState<LauncherView>('home')
   const [selectedGame, setSelectedGame] = useState<GameDefinition | null>(null)
 
+  // Restore a saved session once on launch (no-op for guests).
+  useEffect(() => {
+    resume()
+  }, [resume])
+
+  // The name used in games: the account username when logged in, else the guest name.
+  const playerName = session?.username ?? name
   const connecting = store.connectionStatus === 'connecting'
 
   const selectGame = (game: GameDefinition) => {
@@ -34,13 +45,13 @@ export function App() {
 
   const host = () => {
     if (!selectedGame) return
-    store.host(name, selectedGame.id).catch(() => {
+    store.host(playerName, selectedGame.id).catch(() => {
       /* error surfaced via store.error / toast */
     })
   }
 
   const join = (code: string) => {
-    store.join(code, name).catch(() => {
+    store.join(code, playerName).catch(() => {
       /* error surfaced via store.error / toast */
     })
   }
@@ -57,11 +68,12 @@ export function App() {
 
   return (
     <>
-      <TopBar />
+      <TopBar onOpenFriends={() => setView('friends')} />
       <main className={styles.content}>{renderScreen()}</main>
 
       <Toast message={store.error} onDismiss={store.clearError} />
-      <NameDialog open={!hasName} required />
+      {/* Guests must pick a name; logged-in users already have a username. */}
+      <NameDialog open={!hasName && !session} required />
 
       {connecting ? (
         <div className={styles.overlay}>
@@ -111,6 +123,11 @@ export function App() {
           onLeave={leaveToMenu}
         />
       )
+    }
+
+    // Friends hub (only reachable while logged in).
+    if (view === 'friends' && session) {
+      return <FriendsScreen onBack={() => setView('home')} />
     }
 
     // Otherwise show the launcher navigation.

@@ -10,11 +10,25 @@ import {
 import { DEFAULT_GAME_ID, isKnownGame } from '@shared/games/registry'
 import { Room } from './Room'
 import { generateUniqueRoomCode, normalizeCode } from './roomCode'
+import { createDb, resolveDbPath, type DB } from './db'
+import { authenticate, createUser, getUserById, SessionStore, type AuthResult } from './auth'
+import {
+  getFriendsPayload,
+  getRelatedUserIds,
+  recordMatch,
+  removeFriend,
+  respondToRequest,
+  sendFriendRequest
+} from './friends'
 
 interface ClientState {
   socket: WebSocket
   playerId: string | null
   roomCode: string | null
+  /** Account id once authenticated; null for guests. */
+  userId: string | null
+  /** Session token issued at login, so the client can resume after a reconnect. */
+  token: string | null
 }
 
 const MAX_NAME_LENGTH = 24
@@ -26,9 +40,17 @@ const MAX_NAME_LENGTH = 24
 export class GameServer {
   private rooms = new Map<string, Room>()
   private clients = new Map<WebSocket, ClientState>()
+  private readonly db: DB
+  private readonly sessions = new SessionStore()
+  /** userId -> the set of that account's live sockets (multi-window safe). */
+  private presence = new Map<string, Set<WebSocket>>()
+
+  constructor(db: DB = createDb(resolveDbPath())) {
+    this.db = db
+  }
 
   handleConnection(socket: WebSocket): void {
-    this.clients.set(socket, { socket, playerId: null, roomCode: null })
+    this.clients.set(socket, { socket, playerId: null, roomCode: null, userId: null, token: null })
 
     socket.on('message', (data) => {
       this.handleMessage(socket, data.toString())
@@ -81,6 +103,20 @@ export class GameServer {
         return this.onGameAction(client, msg.action)
       case 'return_to_lobby':
         return this.onReturnToLobby(client)
+      case 'signup':
+        return this.onAuth(client, createUser(this.db, msg.username ?? '', msg.password ?? ''))
+      case 'login':
+        return this.onAuth(client, authenticate(this.db, msg.username ?? '', msg.password ?? ''))
+      case 'resume_session':
+        return this.onResumeSession(client, msg.token)
+      case 'logout':
+        return this.onLogout(client)
+      case 'friend_request':
+        return this.onFriendRequest(client, msg.username)
+      case 'respond_friend_request':
+        return this.onRespondFriendRequest(client, msg.fromUserId, msg.accept)
+      case 'remove_friend':
+        return this.onRemoveFriend(client, msg.userId)
       default:
         return this.sendError(client.socket, 'MALFORMED', 'Unknown message type.')
     }
@@ -107,7 +143,7 @@ export class GameServer {
     this.rooms.set(code, room)
 
     const playerId = randomUUID()
-    room.addPlayer(playerId, name, client.socket)
+    room.addPlayer(playerId, name, client.socket, client.userId)
     client.playerId = playerId
     client.roomCode = code
 
@@ -139,7 +175,7 @@ export class GameServer {
     if (client.roomCode) this.onLeaveRoom(client)
 
     const playerId = randomUUID()
-    room.addPlayer(playerId, name, client.socket)
+    room.addPlayer(playerId, name, client.socket, client.userId)
     client.playerId = playerId
     client.roomCode = room.code
 
@@ -228,6 +264,7 @@ export class GameServer {
     if (room.hasGame() && room.status !== 'lobby') {
       const finished = room.status === 'finished'
       const results = finished ? room.getResults() : null
+      if (finished) this.recordFinishedMatch(room)
       for (const playerId of room.playerIds) {
         const view = room.getPlayerView(playerId)
         if (finished) {
@@ -247,14 +284,179 @@ export class GameServer {
     }
   }
 
+  /**
+   * Record a finished game exactly once. Only games where every participant is
+   * a logged-in account are recorded (guest/mixed rooms are skipped), then the
+   * affected players' friend views are refreshed so records update live.
+   */
+  private recordFinishedMatch(room: Room): void {
+    if (room.hasRecordedMatch) return
+    room.markMatchRecorded()
+    const outcome = room.getMatchOutcome()
+    if (!outcome.recordable) return
+    recordMatch(this.db, room.gameId, outcome.participantIds, outcome.winnerIds)
+    for (const userId of outcome.participantIds) this.broadcastPresenceChange(userId)
+  }
+
+  // --- Accounts & friends --------------------------------------------------
+
+  private onAuth(client: ClientState, result: AuthResult): void {
+    if (!result.ok) {
+      return this.send(client.socket, { type: 'auth_result', ok: false, error: result.error })
+    }
+    this.setIdentity(client, result.user.id)
+    const token = this.sessions.issue(result.user.id)
+    client.token = token
+    this.send(client.socket, {
+      type: 'auth_result',
+      ok: true,
+      token,
+      profile: result.user
+    })
+    this.pushFriends(client.userId!)
+    this.broadcastPresenceChange(result.user.id)
+  }
+
+  private onResumeSession(client: ClientState, token: unknown): void {
+    if (typeof token !== 'string') {
+      return this.send(client.socket, { type: 'auth_result', ok: false, error: 'Invalid session.' })
+    }
+    const userId = this.sessions.resolve(token)
+    const user = userId ? getUserById(this.db, userId) : null
+    if (!user) {
+      return this.send(client.socket, {
+        type: 'auth_result',
+        ok: false,
+        error: 'Your session has expired. Please log in again.'
+      })
+    }
+    this.setIdentity(client, user.id)
+    client.token = token
+    this.send(client.socket, { type: 'auth_result', ok: true, token, profile: user })
+    this.pushFriends(user.id)
+    this.broadcastPresenceChange(user.id)
+  }
+
+  private onLogout(client: ClientState): void {
+    const userId = client.userId
+    if (client.token) this.sessions.revoke(client.token)
+    this.removePresence(client)
+    client.userId = null
+    client.token = null
+    this.send(client.socket, { type: 'auth_result', ok: true })
+    if (userId) this.broadcastPresenceChange(userId)
+  }
+
+  private onFriendRequest(client: ClientState, username: unknown): void {
+    if (!client.userId) return this.sendFriendError(client, 'Log in to add friends.')
+    if (typeof username !== 'string' || !username.trim()) {
+      return this.sendFriendError(client, 'Enter a username.')
+    }
+    const result = sendFriendRequest(this.db, client.userId, username)
+    if (!result.ok) return this.sendFriendError(client, result.error)
+    // Refresh both sides: the sender (outgoing) and, if online, the target.
+    this.broadcastPresenceChange(client.userId)
+  }
+
+  private onRespondFriendRequest(
+    client: ClientState,
+    fromUserId: unknown,
+    accept: unknown
+  ): void {
+    if (!client.userId) return this.sendFriendError(client, 'Log in to manage friends.')
+    if (typeof fromUserId !== 'string') return this.sendFriendError(client, 'Invalid request.')
+    const result = respondToRequest(this.db, client.userId, fromUserId, accept === true)
+    if (!result.ok) return this.sendFriendError(client, result.error)
+    this.broadcastPresenceChange(client.userId)
+    this.pushFriends(fromUserId)
+  }
+
+  private onRemoveFriend(client: ClientState, userId: unknown): void {
+    if (!client.userId) return this.sendFriendError(client, 'Log in to manage friends.')
+    if (typeof userId !== 'string') return this.sendFriendError(client, 'Invalid request.')
+    removeFriend(this.db, client.userId, userId)
+    this.broadcastPresenceChange(client.userId)
+    this.pushFriends(userId)
+  }
+
+  private sendFriendError(client: ClientState, message: string): void {
+    this.send(client.socket, { type: 'friend_error', message })
+  }
+
+  // --- Presence ------------------------------------------------------------
+
+  private setIdentity(client: ClientState, userId: string): void {
+    // If this socket was already someone else, drop that presence first.
+    if (client.userId && client.userId !== userId) this.removePresence(client)
+    client.userId = userId
+    let sockets = this.presence.get(userId)
+    if (!sockets) {
+      sockets = new Set()
+      this.presence.set(userId, sockets)
+    }
+    sockets.add(client.socket)
+  }
+
+  private removePresence(client: ClientState): void {
+    if (!client.userId) return
+    const sockets = this.presence.get(client.userId)
+    if (!sockets) return
+    sockets.delete(client.socket)
+    if (sockets.size === 0) this.presence.delete(client.userId)
+  }
+
+  private isOnline(userId: string): boolean {
+    return this.presence.has(userId)
+  }
+
+  /** Send a message to every live socket belonging to an account. */
+  private sendToUser(userId: string, message: ServerMessage): void {
+    const sockets = this.presence.get(userId)
+    if (!sockets) return
+    const data = encode(message)
+    for (const socket of sockets) {
+      if (socket.readyState === socket.OPEN) socket.send(data)
+    }
+  }
+
+  /** Push a fresh friends payload to all of a user's sockets (if online). */
+  private pushFriends(userId: string): void {
+    if (!this.isOnline(userId)) return
+    const payload = getFriendsPayload(this.db, userId, (id) => this.isOnline(id))
+    this.sendToUser(userId, {
+      type: 'friends_update',
+      friends: payload.friends,
+      incoming: payload.incoming,
+      outgoing: payload.outgoing
+    })
+  }
+
+  /**
+   * A user's presence, requests or records changed: refresh their own friends
+   * view and that of everyone connected to them, so online dots and records
+   * update on both sides.
+   */
+  private broadcastPresenceChange(userId: string): void {
+    this.pushFriends(userId)
+    for (const relatedId of getRelatedUserIds(this.db, userId)) this.pushFriends(relatedId)
+  }
+
+  private send(socket: WebSocket, message: ServerMessage): void {
+    if (socket.readyState === socket.OPEN) socket.send(encode(message))
+  }
+
   private handleClose(socket: WebSocket): void {
     const client = this.clients.get(socket)
     this.clients.delete(socket)
     if (!client) return
+    const userId = client.userId
+    this.removePresence(client)
     const room = this.getRoom(client)
     if (room && client.playerId) {
       room.handleDisconnect(client.playerId)
       this.broadcastState(room)
     }
+    // Let friends see this account go offline (only once its last socket drops).
+    if (userId && !this.isOnline(userId)) this.broadcastPresenceChange(userId)
   }
 }

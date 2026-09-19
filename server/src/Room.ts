@@ -9,6 +9,8 @@ interface PlayerConnection {
   name: string
   socket: WebSocket
   connected: boolean
+  /** Account id if this player is logged in; null for guests. */
+  userId: string | null
 }
 
 /**
@@ -27,6 +29,8 @@ export class Room {
   private players = new Map<string, PlayerConnection>()
   private game: unknown | null = null
   status: RoomState['status'] = 'lobby'
+  /** Guards against recording the same finished game more than once. */
+  private matchRecorded = false
 
   constructor(code: string, gameId: string) {
     this.code = code
@@ -64,10 +68,36 @@ export class Room {
     return this.players.size >= this.maxPlayers
   }
 
-  addPlayer(id: string, name: string, socket: WebSocket): void {
-    this.players.set(id, { id, name, socket, connected: true })
+  addPlayer(id: string, name: string, socket: WebSocket, userId: string | null = null): void {
+    this.players.set(id, { id, name, socket, connected: true, userId })
     this.order.push(id)
     if (!this.hostId) this.hostId = id
+  }
+
+  /** Account id for a room player, or null if that player is a guest/unknown. */
+  getUserId(playerId: string): string | null {
+    return this.players.get(playerId)?.userId ?? null
+  }
+
+  /**
+   * Winner account ids and all participant account ids for the finished game.
+   * `recordable` is true only when every participant is a logged-in account,
+   * which is the precondition for writing a match record.
+   */
+  getMatchOutcome(): { recordable: boolean; participantIds: string[]; winnerIds: string[] } {
+    const participants = this.order.map((id) => this.getUserId(id))
+    const recordable = participants.length > 0 && participants.every((uid) => uid !== null)
+    const winnerIds = this.game
+      ? this.engine
+          .getWinnerIds(this.game)
+          .map((pid) => this.getUserId(pid))
+          .filter((uid): uid is string => uid !== null)
+      : []
+    return {
+      recordable,
+      participantIds: participants.filter((uid): uid is string => uid !== null),
+      winnerIds
+    }
   }
 
   /** Remove a player entirely (used when they leave from the lobby). */
@@ -135,12 +165,22 @@ export class Room {
   startGame(): void {
     this.game = this.engine.createGame(this.order)
     this.status = 'in-game'
+    this.matchRecorded = false
   }
 
   /** Reset a finished game back to a fresh lobby for a rematch. */
   returnToLobby(): void {
     this.game = null
     this.status = 'lobby'
+    this.matchRecorded = false
+  }
+
+  get hasRecordedMatch(): boolean {
+    return this.matchRecorded
+  }
+
+  markMatchRecorded(): void {
+    this.matchRecorded = true
   }
 
   /** Validate a raw client action against the engine. Returns null if invalid. */

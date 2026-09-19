@@ -1,11 +1,25 @@
 import { useState } from 'react'
 import { useProfileStore } from '../store/profileStore'
+import { useAuthStore } from '../store/authStore'
 import { NameDialog } from './NameDialog'
+import { AuthDialog } from './AuthDialog'
 import styles from './TopBar.module.css'
 
-export function TopBar() {
+interface TopBarProps {
+  /** Open the friends hub (only shown when logged in). */
+  onOpenFriends?: () => void
+}
+
+export function TopBar({ onOpenFriends }: TopBarProps) {
   const name = useProfileStore((s) => s.name)
+  const session = useAuthStore((s) => s.session)
+  const incomingCount = useAuthStore((s) => s.incoming.length)
+  const logout = useAuthStore((s) => s.logout)
+
   const [editing, setEditing] = useState(false)
+  const [authOpen, setAuthOpen] = useState(false)
+
+  const displayName = session?.username ?? name
 
   return (
     <header className={styles.bar}>
@@ -15,20 +29,43 @@ export function TopBar() {
         </span>
         <span className={styles.title}>Game Hub</span>
       </div>
-      <button
-        className={styles.profile}
-        onClick={() => setEditing(true)}
-        title="Change display name"
-      >
-        <span className={styles.avatar} aria-hidden>
-          {name.charAt(0).toUpperCase() || '?'}
-        </span>
-        <span className={styles.name}>{name || 'Set name'}</span>
-        <span className={styles.gear} aria-hidden>
-          ⚙
-        </span>
-      </button>
+
+      <div className={styles.actions}>
+        {session ? (
+          <button className={styles.action} onClick={onOpenFriends} title="Friends">
+            <span aria-hidden>👥</span>
+            <span>Friends</span>
+            {incomingCount > 0 ? <span className={styles.badge}>{incomingCount}</span> : null}
+          </button>
+        ) : (
+          <button className={styles.action} onClick={() => setAuthOpen(true)}>
+            Log in
+          </button>
+        )}
+
+        <button
+          className={styles.profile}
+          onClick={() => setEditing(true)}
+          title="Display name & theme"
+        >
+          <span className={styles.avatar} aria-hidden>
+            {displayName.charAt(0).toUpperCase() || '?'}
+          </span>
+          <span className={styles.name}>{displayName || 'Set name'}</span>
+          <span className={styles.gear} aria-hidden>
+            ⚙
+          </span>
+        </button>
+
+        {session ? (
+          <button className={styles.action} onClick={logout} title="Log out">
+            Log out
+          </button>
+        ) : null}
+      </div>
+
       <NameDialog open={editing} onClose={() => setEditing(false)} />
+      <AuthDialog open={authOpen} onClose={() => setAuthOpen(false)} />
     </header>
   )
 }

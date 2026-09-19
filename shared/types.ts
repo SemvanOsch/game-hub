@@ -30,3 +30,38 @@ export const ROOM_LIMITS = {
   MIN_PLAYERS: 2,
   MAX_PLAYERS: 6
 } as const
+
+// ---------------------------------------------------------------------------
+// Accounts, friends & records
+// ---------------------------------------------------------------------------
+
+/** A registered account as exposed to clients (never includes secrets). */
+export interface PublicUser {
+  id: string
+  username: string
+}
+
+/** Win/loss tally for one game, from the perspective of the local user. */
+export interface GameRecord {
+  gameId: string
+  wins: number
+  losses: number
+}
+
+/** A confirmed friend plus live presence and the head-to-head record vs them. */
+export interface FriendSummary {
+  userId: string
+  username: string
+  online: boolean
+  /** Head-to-head record per game, from the local user's perspective. */
+  records: GameRecord[]
+}
+
+/** The full friends payload the server pushes whenever anything changes. */
+export interface FriendsPayload {
+  friends: FriendSummary[]
+  /** Requests others have sent to the local user (awaiting their response). */
+  incoming: PublicUser[]
+  /** Requests the local user has sent that are still pending. */
+  outgoing: PublicUser[]
+}

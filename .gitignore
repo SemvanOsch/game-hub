@@ -5,8 +5,15 @@ dist/
 *.log
 .DS_Store
 .vite/
+
+# SQLite data (accounts, friends, records). See DATA_DIR / DB_PATH in db.ts.
+data/
+*.db
+*.db-shm
+*.db-wal
 tsconfig.tsbuildinfo
 *.tsbuildinfo
+electron.vite.config.*.mjs
 
 # Local / deploy-specific env files. The committed .env.example is the template;
 # copy it to .env (dev) or .env.production (build) and fill in your values.

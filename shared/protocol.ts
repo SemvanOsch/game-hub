@@ -5,7 +5,7 @@
  * the server validates them and broadcasts the resulting authoritative state
  * (ServerMessage). Clients never mutate game state directly.
  */
-import type { RoomState } from './types'
+import type { FriendsPayload, PublicUser, RoomState } from './types'
 
 export const PROTOCOL_VERSION = 1
 
@@ -43,6 +43,46 @@ export interface ReturnToLobbyMessage {
   type: 'return_to_lobby'
 }
 
+// --- Accounts & friends (optional; guests never send these) ---------------
+
+/** Create a new account. The server hashes the password; it is never stored raw. */
+export interface SignupMessage {
+  type: 'signup'
+  username: string
+  password: string
+}
+/** Authenticate with an existing account. */
+export interface LoginMessage {
+  type: 'login'
+  username: string
+  password: string
+}
+/** Re-authenticate a returning session using a previously issued token. */
+export interface ResumeSessionMessage {
+  type: 'resume_session'
+  token: string
+}
+/** Drop the socket's authenticated identity (back to guest). */
+export interface LogoutMessage {
+  type: 'logout'
+}
+/** Send a friend request to another account by username. */
+export interface FriendRequestMessage {
+  type: 'friend_request'
+  username: string
+}
+/** Accept or decline a pending incoming friend request. */
+export interface RespondFriendRequestMessage {
+  type: 'respond_friend_request'
+  fromUserId: string
+  accept: boolean
+}
+/** Remove an existing friend (or cancel an outgoing request). */
+export interface RemoveFriendMessage {
+  type: 'remove_friend'
+  userId: string
+}
+
 export type ClientMessage =
   | CreateRoomMessage
   | JoinRoomMessage
@@ -50,6 +90,13 @@ export type ClientMessage =
   | StartGameMessage
   | GameActionMessage
   | ReturnToLobbyMessage
+  | SignupMessage
+  | LoginMessage
+  | ResumeSessionMessage
+  | LogoutMessage
+  | FriendRequestMessage
+  | RespondFriendRequestMessage
+  | RemoveFriendMessage
 
 export type ClientMessageType = ClientMessage['type']
 
@@ -109,12 +156,42 @@ export interface ErrorMessage {
   message: string
 }
 
+// --- Accounts & friends ----------------------------------------------------
+
+/**
+ * Result of a signup / login / resume attempt. On success carries the session
+ * token (persist client-side to resume later) and the account profile; on
+ * failure carries a human-readable reason.
+ */
+export interface AuthResultMessage {
+  type: 'auth_result'
+  ok: boolean
+  token?: string
+  profile?: PublicUser
+  error?: string
+}
+/** Pushed whenever the local user's friends, requests, or their presence change. */
+export interface FriendsUpdateMessage {
+  type: 'friends_update'
+  friends: FriendsPayload['friends']
+  incoming: FriendsPayload['incoming']
+  outgoing: FriendsPayload['outgoing']
+}
+/** A non-fatal friend-action failure (e.g. unknown username, already friends). */
+export interface FriendErrorMessage {
+  type: 'friend_error'
+  message: string
+}
+
 export type ServerMessage =
   | JoinedMessage
   | RoomUpdateMessage
   | GameStateMessage
   | GameOverMessage
   | ErrorMessage
+  | AuthResultMessage
+  | FriendsUpdateMessage
+  | FriendErrorMessage
 
 export type ServerMessageType = ServerMessage['type']
 

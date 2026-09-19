@@ -69,5 +69,10 @@ export const yahtzeeEngine: GameEngine<
   // No hidden information: every player sees the full state.
   getPlayerView: (state) => state,
   isFinished: (state) => state.status === 'finished',
-  getResults: (state) => calculateFinalScores(state)
+  getResults: (state) => calculateFinalScores(state),
+  getWinnerIds: (state) => {
+    // Rank 1 in the final standings; more than one id on a tie.
+    const finalScores = calculateFinalScores(state)
+    return finalScores.filter((entry) => entry.rank === 1).map((entry) => entry.playerId)
+  }
 }

@@ -1,8 +1,7 @@
 import { create } from 'zustand'
 import type { RoomState } from '@shared/types'
 import type { ServerErrorCode, ServerMessage } from '@shared/protocol'
-import { MULTIPLAYER_SERVER_URL } from '../config'
-import { Connection } from '../net/connection'
+import { ensureConnection, onDisconnect, onServerMessage, sendMessage } from '../net/socket'
 
 export type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error'
 
@@ -28,9 +27,6 @@ interface MultiplayerState {
   returnToLobby: () => void
   clearError: () => void
 }
-
-// The socket lives outside React state so it never triggers re-renders.
-let connection: Connection | null = null
 
 const ERROR_TEXT: Record<ServerErrorCode, string> = {
   ROOM_NOT_FOUND: 'No room found with that code. Double-check it and try again.',
@@ -77,38 +73,34 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => {
       case 'error':
         set({ error: ERROR_TEXT[message.code] ?? message.message })
         break
+      // Account/friend messages are handled by the auth store.
     }
   }
 
-  function ensureConnection(): Promise<void> {
-    if (connection && connection.isOpen) return Promise.resolve()
-    set({ connectionStatus: 'connecting', error: null })
-    connection = new Connection(MULTIPLAYER_SERVER_URL, {
-      onMessage: handleMessage,
-      onClose: () => {
-        set({
-          connectionStatus: 'error',
-          error: 'Connection to the server was lost.',
-          room: null,
-          gameId: null,
-          view: null,
-          results: null,
-          selfId: null
-        })
-        connection = null
-      },
-      onError: () => {
-        /* handled via connect() rejection / onClose */
-      }
+  // Subscribe once to the shared socket. Room state resets on disconnect, but
+  // the socket itself (and the auth session on it) is managed by socket.ts.
+  onServerMessage(handleMessage)
+  onDisconnect(() => {
+    set({
+      connectionStatus: 'error',
+      error: 'Connection to the server was lost.',
+      room: null,
+      gameId: null,
+      view: null,
+      results: null,
+      selfId: null
     })
-    return connection.connect().then(
-      () => set({ connectionStatus: 'connected' }),
-      (err: Error) => {
-        set({ connectionStatus: 'error', error: err.message })
-        connection = null
-        throw err
-      }
-    )
+  })
+
+  async function connect(): Promise<void> {
+    set({ connectionStatus: 'connecting', error: null })
+    try {
+      await ensureConnection()
+      set({ connectionStatus: 'connected' })
+    } catch (err) {
+      set({ connectionStatus: 'error', error: (err as Error).message })
+      throw err
+    }
   }
 
   return {
@@ -121,21 +113,19 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => {
     error: null,
 
     async host(playerName, gameId) {
-      await ensureConnection()
-      connection?.send({ type: 'create_room', playerName, gameId })
+      await connect()
+      sendMessage({ type: 'create_room', playerName, gameId })
     },
 
     async join(code, playerName) {
-      await ensureConnection()
-      connection?.send({ type: 'join_room', code, playerName })
+      await connect()
+      sendMessage({ type: 'join_room', code, playerName })
     },
 
     leave() {
-      connection?.send({ type: 'leave_room' })
-      connection?.close()
-      connection = null
+      // Leave the room but keep the shared socket open (auth/friends live on it).
+      sendMessage({ type: 'leave_room' })
       set({
-        connectionStatus: 'idle',
         selfId: null,
         room: null,
         gameId: null,
@@ -146,13 +136,13 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => {
     },
 
     startGame() {
-      connection?.send({ type: 'start_game' })
+      sendMessage({ type: 'start_game' })
     },
     sendAction(action) {
-      connection?.send({ type: 'game_action', action })
+      sendMessage({ type: 'game_action', action })
     },
     returnToLobby() {
-      connection?.send({ type: 'return_to_lobby' })
+      sendMessage({ type: 'return_to_lobby' })
     },
 
     clearError() {

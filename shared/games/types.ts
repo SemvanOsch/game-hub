@@ -51,4 +51,12 @@ export interface GameEngine<S = unknown, V = unknown, A = unknown, R = unknown> 
 
   /** Final results payload, broadcast once the game finishes. */
   getResults(state: S): R
+
+  /**
+   * Player ids of the winner(s) of a finished game (more than one on a tie,
+   * empty if there is no winner). Used by the server to record match results
+   * without knowing anything game-specific. Only meaningful once
+   * {@link isFinished} is true.
+   */
+  getWinnerIds(state: S): string[]
 }
