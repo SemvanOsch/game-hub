@@ -3,6 +3,11 @@ import { app, BrowserWindow, shell } from 'electron'
 
 const isDev = !app.isPackaged
 
+// Display name used by Windows (taskbar/Task Manager grouping) and the menu.
+app.setName('Game Hub')
+
+const iconPath = join(__dirname, '../../build/icon.png')
+
 function createWindow(): void {
   const window = new BrowserWindow({
     width: 1180,
@@ -13,6 +18,8 @@ function createWindow(): void {
     backgroundColor: '#0f1115',
     autoHideMenuBar: true,
     title: 'Game Hub',
+    // In dev the packaged icon isn't embedded yet, so point the window at it.
+    ...(isDev ? { icon: iconPath } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       // Security: keep the renderer sandboxed from Node.
@@ -40,6 +47,8 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  // Ensures Windows groups the app (taskbar/Task Manager) under our identity.
+  app.setAppUserModelId('com.example.gamehub')
   createWindow()
 
   app.on('activate', () => {

@@ -56,13 +56,13 @@
  * Applied via <html data-theme="..."> (see themeStore).
  * ------------------------------------------------------------------------- */
 
-/* Dark · Red */
+/* Dark · Red (deep dark red) */
 :root[data-theme='red'] {
-  --accent: #d5343a;
-  --accent-hover: #e64b51;
-  --accent-soft: rgba(213, 52, 58, 0.18);
+  --accent: #7a1418;
+  --accent-hover: #a52228;
+  --accent-soft: rgba(150, 30, 35, 0.2);
   --accent-contrast: #ffffff;
-  --glow: rgba(213, 52, 58, 0.13);
+  --glow: rgba(122, 20, 24, 0.16);
 }
 
 /* Dark · Green */
