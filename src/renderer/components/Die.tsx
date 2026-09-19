@@ -13,11 +13,13 @@ interface DieProps {
   value: number
   held: boolean
   disabled?: boolean
+  /** When true, plays the roll/tumble animation. */
+  rolling?: boolean
   /** value 0 renders an empty, not-yet-rolled die. */
   onClick?: () => void
 }
 
-export function Die({ value, held, disabled = false, onClick }: DieProps) {
+export function Die({ value, held, disabled = false, rolling = false, onClick }: DieProps) {
   const rolled = value >= 1 && value <= 6
   const pips = rolled ? PIP_LAYOUT[value] : []
   const interactive = Boolean(onClick) && !disabled && rolled
@@ -25,7 +27,12 @@ export function Die({ value, held, disabled = false, onClick }: DieProps) {
   return (
     <button
       type="button"
-      className={[styles.die, held ? styles.held : '', interactive ? styles.interactive : ''].join(' ')}
+      className={[
+        styles.die,
+        held ? styles.held : '',
+        interactive ? styles.interactive : '',
+        rolling ? styles.rolling : ''
+      ].join(' ')}
       onClick={interactive ? onClick : undefined}
       disabled={!interactive}
       aria-pressed={held}
@@ -38,7 +45,6 @@ export function Die({ value, held, disabled = false, onClick }: DieProps) {
           </span>
         ))}
       </span>
-      {held ? <span className={styles.heldTag}>HELD</span> : null}
     </button>
   )
 }

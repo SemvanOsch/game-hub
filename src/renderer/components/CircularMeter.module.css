@@ -1,0 +1,39 @@
+.wrap {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+
+.svg {
+  transform: rotate(-90deg);
+}
+
+.track {
+  stroke: var(--surface-3);
+}
+
+.progress {
+  stroke: var(--accent);
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.progressComplete {
+  stroke: var(--warning);
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  letter-spacing: -0.02em;
+}
+
+.labelComplete {
+  color: var(--warning);
+}

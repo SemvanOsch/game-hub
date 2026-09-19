@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import type { RoomState } from '@shared/types'
 import type { Category } from '@shared/yahtzee/categories'
 import { MAX_ROLLS } from '@shared/yahtzee/dice'
@@ -33,6 +34,20 @@ export function GameScreen({
   const currentName = nameById.get(currentId) ?? 'Player'
   const rollsLeft = MAX_ROLLS - game.rollsUsed
   const canRoll = isMyTurn && game.rollsUsed < MAX_ROLLS
+
+  // Play the tumble animation on dice that were just (re)rolled.
+  const [spinning, setSpinning] = useState<boolean[]>(() => game.dice.map(() => false))
+  const prevRolls = useRef(game.rollsUsed)
+  useEffect(() => {
+    if (game.rollsUsed > prevRolls.current) {
+      prevRolls.current = game.rollsUsed
+      setSpinning(game.held.map((h) => !h))
+      const timer = window.setTimeout(() => setSpinning(game.dice.map(() => false)), 560)
+      return () => window.clearTimeout(timer)
+    }
+    prevRolls.current = game.rollsUsed
+    return undefined
+  }, [game.rollsUsed, game.held, game.dice])
   const canHold = isMyTurn && game.rollsUsed > 0 && game.rollsUsed < MAX_ROLLS
   const canScore = isMyTurn && game.rollsUsed > 0
   const totalRounds = 13
@@ -79,6 +94,7 @@ export function GameScreen({
                 value={value}
                 held={game.held[i]}
                 disabled={!canHold}
+                rolling={spinning[i]}
                 onClick={canHold ? () => onKeepDie(i) : undefined}
               />
             ))}

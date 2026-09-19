@@ -6,8 +6,13 @@ import {
   UPPER_CATEGORIES,
   type Category
 } from '@shared/yahtzee/categories'
-import { calculatePossibleScores, calculateTotals } from '@shared/yahtzee/scoring'
+import {
+  UPPER_BONUS_THRESHOLD,
+  calculatePossibleScores,
+  calculateTotals
+} from '@shared/yahtzee/scoring'
 import type { YahtzeeGameState } from '@shared/yahtzee/engine'
+import { CircularMeter } from './CircularMeter'
 import styles from './Scorecard.module.css'
 
 interface ScorecardProps {
@@ -47,8 +52,15 @@ export function Scorecard({ game, players, selfId, canScore, onScore }: Scorecar
         }
         if (isSelfColumn && previews) {
           return (
-            <td key={id} className={`${styles.cell} ${isCurrent ? styles.currentCol : ''}`}>
-              <button className={styles.preview} onClick={() => onScore(category)}>
+            <td
+              key={id}
+              className={`${styles.cell} ${styles.previewCell} ${isCurrent ? styles.currentCol : ''}`}
+            >
+              <button
+                className={styles.preview}
+                onClick={() => onScore(category)}
+                title={`Score ${previews[category]} in ${CATEGORY_LABELS[category]}`}
+              >
                 {previews[category]}
               </button>
             </td>
@@ -106,7 +118,31 @@ export function Scorecard({ game, players, selfId, canScore, onScore }: Scorecar
           </tr>
           {UPPER_CATEGORIES.map(renderCategoryRow)}
           {renderTotalRow('Subtotal', (id) => totals[id].upperSubtotal, 'subtotal')}
-          {renderTotalRow('Bonus (63+ → 35)', (id) => totals[id].upperBonus, 'subtotal')}
+
+          {/* Bonus row with a circular progress meter toward the +35 bonus. */}
+          <tr className={styles.bonusRow}>
+            <th scope="row" className={styles.rowHead}>
+              <span className={styles.catLabel}>Upper bonus</span>
+              <span className={styles.catHint}>+35 when subtotal reaches {UPPER_BONUS_THRESHOLD}</span>
+            </th>
+            {columns.map((id) => {
+              const t = totals[id]
+              const complete = t.upperBonus > 0
+              return (
+                <td key={id} className={`${styles.cell} ${id === currentId ? styles.currentCol : ''}`}>
+                  <div className={styles.meterCell}>
+                    <CircularMeter
+                      value={t.upperSubtotal}
+                      max={UPPER_BONUS_THRESHOLD}
+                      complete={complete}
+                      label={complete ? '+35' : String(t.upperSubtotal)}
+                      title={`${t.upperSubtotal} / ${UPPER_BONUS_THRESHOLD} toward the +35 bonus`}
+                    />
+                  </div>
+                </td>
+              )
+            })}
+          </tr>
 
           <tr className={styles.sectionRow}>
             <td colSpan={columns.length + 1}>Lower section</td>
