@@ -1,21 +1,16 @@
 import { useState } from 'react'
 import { useProfileStore } from './store/profileStore'
-import {
-  selectIsHost,
-  selectIsMyTurn,
-  useMultiplayerStore
-} from './store/multiplayerStore'
+import { selectIsHost, useMultiplayerStore } from './store/multiplayerStore'
 import type { GameDefinition } from './games/registry'
+import { getGameUI } from './games/ui'
 import { TopBar } from './components/TopBar'
 import { Toast } from './components/Toast'
 import { NameDialog } from './components/NameDialog'
 import { Spinner } from './components/Spinner'
 import { HomeScreen } from './screens/HomeScreen'
-import { YahtzeeMenu } from './screens/YahtzeeMenu'
+import { GameMenu } from './screens/GameMenu'
 import { JoinScreen } from './screens/JoinScreen'
 import { LobbyScreen } from './screens/LobbyScreen'
-import { GameScreen } from './screens/GameScreen'
-import { GameOverScreen } from './screens/GameOverScreen'
 import styles from './App.module.css'
 
 type LauncherView = 'home' | 'menu' | 'join'
@@ -26,7 +21,6 @@ export function App() {
 
   const store = useMultiplayerStore()
   const isHost = useMultiplayerStore(selectIsHost)
-  const isMyTurn = useMultiplayerStore(selectIsMyTurn)
 
   const [view, setView] = useState<LauncherView>('home')
   const [selectedGame, setSelectedGame] = useState<GameDefinition | null>(null)
@@ -80,10 +74,14 @@ export function App() {
   function renderScreen() {
     // Once we're in a room, the network state drives the screen.
     if (store.room && store.selfId) {
-      if (store.results && store.room.status === 'finished') {
+      const gameUI = store.gameId ? getGameUI(store.gameId) : undefined
+
+      if (gameUI && store.results && store.room.status === 'finished') {
+        const { GameOver } = gameUI
         return (
-          <GameOverScreen
+          <GameOver
             room={store.room}
+            view={store.view}
             results={store.results}
             selfId={store.selfId}
             isHost={isHost}
@@ -92,16 +90,14 @@ export function App() {
           />
         )
       }
-      if (store.game && store.room.status === 'in-game') {
+      if (gameUI && store.view && store.room.status === 'in-game') {
+        const { Game } = gameUI
         return (
-          <GameScreen
+          <Game
             room={store.room}
-            game={store.game}
+            view={store.view}
             selfId={store.selfId}
-            isMyTurn={isMyTurn}
-            onRoll={store.rollDice}
-            onKeepDie={store.keepDie}
-            onScore={store.submitScore}
+            sendAction={store.sendAction}
             onLeave={leaveToMenu}
           />
         )
@@ -120,7 +116,7 @@ export function App() {
     // Otherwise show the launcher navigation.
     if (view === 'menu' && selectedGame) {
       return (
-        <YahtzeeMenu
+        <GameMenu
           game={selectedGame}
           connecting={connecting}
           onHost={host}

@@ -1,16 +1,8 @@
 import type { WebSocket } from 'ws'
-import { ROOM_LIMITS, type RoomPlayer, type RoomState } from '@shared/types'
+import type { RoomPlayer, RoomState } from '@shared/types'
 import { encode, type ServerMessage } from '@shared/protocol'
-import type { Category } from '@shared/yahtzee/categories'
-import {
-  createGame,
-  keepDieAction,
-  removePlayerFromGame,
-  rollDiceAction,
-  submitScoreAction,
-  type ActionResult,
-  type YahtzeeGameState
-} from '@shared/yahtzee/engine'
+import type { EngineActionResult, GameEngine } from '@shared/games/types'
+import { DEFAULT_GAME_ID, getEngine } from '@shared/games/registry'
 
 interface PlayerConnection {
   id: string
@@ -21,23 +13,35 @@ interface PlayerConnection {
 
 /**
  * A single multiplayer room. Owns the authoritative game state and the set of
- * connected players. Networking concerns (sockets, broadcast) live here;
- * all Yahtzee rules come from the shared engine.
+ * connected players. Networking concerns (sockets, broadcast) live here; all
+ * game rules come from the room's {@link GameEngine}, so the room is fully
+ * game-agnostic.
  */
 export class Room {
   readonly code: string
   readonly gameId: string
+  private readonly engine: GameEngine
   hostId: string
   /** Ordered list of player ids (join order == turn order). */
   private order: string[] = []
   private players = new Map<string, PlayerConnection>()
-  private game: YahtzeeGameState | null = null
+  private game: unknown | null = null
   status: RoomState['status'] = 'lobby'
 
   constructor(code: string, gameId: string) {
     this.code = code
-    this.gameId = gameId
+    const engine = getEngine(gameId) ?? getEngine(DEFAULT_GAME_ID)!
+    this.engine = engine
+    this.gameId = engine.id
     this.hostId = ''
+  }
+
+  get minPlayers(): number {
+    return this.engine.minPlayers
+  }
+
+  get maxPlayers(): number {
+    return this.engine.maxPlayers
   }
 
   get isEmpty(): boolean {
@@ -48,12 +52,16 @@ export class Room {
     return [...this.players.values()].filter((p) => p.connected).length
   }
 
+  get playerIds(): string[] {
+    return [...this.order]
+  }
+
   hasPlayer(id: string): boolean {
     return this.players.has(id)
   }
 
   isFull(): boolean {
-    return this.players.size >= ROOM_LIMITS.MAX_PLAYERS
+    return this.players.size >= this.maxPlayers
   }
 
   addPlayer(id: string, name: string, socket: WebSocket): void {
@@ -68,14 +76,14 @@ export class Room {
     this.order = this.order.filter((pid) => pid !== id)
     if (this.hostId === id) this.reassignHost()
     if (this.game) {
-      const next = removePlayerFromGame(this.game, id)
+      const next = this.engine.removePlayer(this.game, id)
       this.game = next
-      if (next) this.status = next.status === 'finished' ? 'finished' : 'in-game'
+      if (next) this.status = this.engine.isFinished(next) ? 'finished' : 'in-game'
     }
   }
 
-  /** Handle a socket dropping. Removes the player and (mid-game) rebuilds
-   *  the game state so the remaining players can keep playing. */
+  /** Handle a socket dropping. Removes the player and (mid-game) lets the engine
+   *  rebuild the game state so the remaining players are handled cleanly. */
   handleDisconnect(id: string): void {
     if (!this.players.has(id)) return
     this.removePlayer(id)
@@ -95,22 +103,37 @@ export class Room {
       hostId: this.hostId,
       players,
       status: this.status,
-      minPlayers: ROOM_LIMITS.MIN_PLAYERS,
-      maxPlayers: ROOM_LIMITS.MAX_PLAYERS,
+      minPlayers: this.minPlayers,
+      maxPlayers: this.maxPlayers,
       gameId: this.gameId
     }
   }
 
-  getGame(): YahtzeeGameState | null {
-    return this.game
+  hasGame(): boolean {
+    return this.game !== null
+  }
+
+  /** The sanitized, per-player view of the current game (null if no game). */
+  getPlayerView(playerId: string): unknown {
+    if (!this.game) return null
+    return this.engine.getPlayerView(this.game, playerId)
+  }
+
+  getResults(): unknown {
+    if (!this.game) return null
+    return this.engine.getResults(this.game)
   }
 
   canStart(): boolean {
-    return this.status === 'lobby' && this.connectedCount >= ROOM_LIMITS.MIN_PLAYERS
+    return (
+      this.status === 'lobby' &&
+      this.connectedCount >= this.minPlayers &&
+      this.connectedCount <= this.maxPlayers
+    )
   }
 
   startGame(): void {
-    this.game = createGame(this.order)
+    this.game = this.engine.createGame(this.order)
     this.status = 'in-game'
   }
 
@@ -120,41 +143,22 @@ export class Room {
     this.status = 'lobby'
   }
 
+  /** Validate a raw client action against the engine. Returns null if invalid. */
+  validateAction(raw: unknown): unknown | null {
+    return this.engine.validateAction(raw)
+  }
+
   /** Apply a validated game action from a player. */
-  applyAction(
-    playerId: string,
-    action:
-      | { kind: 'roll' }
-      | { kind: 'keep'; index: number }
-      | { kind: 'score'; category: Category }
-  ): ActionResult {
+  applyAction(playerId: string, action: unknown): EngineActionResult<unknown> {
     if (!this.game || this.status !== 'in-game') {
       return { ok: false, code: 'INVALID_ACTION', message: 'No game is in progress.' }
     }
-    const result = this.runAction(this.game, playerId, action)
+    const result = this.engine.applyAction(this.game, playerId, action)
     if (result.ok) {
       this.game = result.state
-      if (result.state.status === 'finished') this.status = 'finished'
+      if (this.engine.isFinished(result.state)) this.status = 'finished'
     }
     return result
-  }
-
-  private runAction(
-    game: YahtzeeGameState,
-    playerId: string,
-    action:
-      | { kind: 'roll' }
-      | { kind: 'keep'; index: number }
-      | { kind: 'score'; category: Category }
-  ): ActionResult {
-    switch (action.kind) {
-      case 'roll':
-        return rollDiceAction(game, playerId)
-      case 'keep':
-        return keepDieAction(game, playerId, action.index)
-      case 'score':
-        return submitScoreAction(game, playerId, action.category)
-    }
   }
 
   // --- Messaging -----------------------------------------------------------

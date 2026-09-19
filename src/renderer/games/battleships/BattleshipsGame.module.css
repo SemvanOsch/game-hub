@@ -1,0 +1,109 @@
+.screen {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-6) var(--space-7);
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+  gap: var(--space-3);
+}
+.leave {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+}
+.leave:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.matchup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 14px;
+}
+.me {
+  font-weight: 650;
+  color: var(--accent-hover);
+}
+.vs {
+  color: var(--text-faint);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.opp {
+  font-weight: 650;
+}
+.offline {
+  color: var(--danger);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.boards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+  margin-top: var(--space-4);
+}
+
+.boardCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+/* Subtle emphasis on the board the player attacks when it's their turn. */
+.active .boardHead h2 {
+  color: var(--accent-hover);
+}
+
+.boardHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.boardHead h2 {
+  font-size: 16px;
+  font-weight: 700;
+}
+.boardSub {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* Stack the two boards on narrower desktop windows. */
+@media (max-width: 900px) {
+  .screen {
+    padding: var(--space-4) var(--space-4) var(--space-6);
+  }
+  .boards {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+}

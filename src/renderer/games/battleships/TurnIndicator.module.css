@@ -1,0 +1,44 @@
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.banner.you {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.banner.other {
+  border-color: var(--border);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.headline {
+  font-size: 17px;
+}
+.you .headline {
+  color: var(--accent-hover);
+}
+.sub {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.feedback {
+  font-size: 14px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  white-space: nowrap;
+}

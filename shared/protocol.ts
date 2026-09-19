@@ -6,8 +6,6 @@
  * (ServerMessage). Clients never mutate game state directly.
  */
 import type { RoomState } from './types'
-import type { Category } from './yahtzee/categories'
-import type { FinalScore, YahtzeeGameState } from './yahtzee/engine'
 
 export const PROTOCOL_VERSION = 1
 
@@ -31,16 +29,14 @@ export interface LeaveRoomMessage {
 export interface StartGameMessage {
   type: 'start_game'
 }
-export interface RollDiceMessage {
-  type: 'roll_dice'
-}
-export interface KeepDieMessage {
-  type: 'keep_die'
-  index: number
-}
-export interface SubmitScoreMessage {
-  type: 'submit_score'
-  category: Category
+/**
+ * Generic in-game action. The `action` payload is opaque at the protocol level;
+ * each game's engine validates and interprets it. This keeps the protocol from
+ * accumulating one message type per game move.
+ */
+export interface GameActionMessage {
+  type: 'game_action'
+  action: unknown
 }
 /** Host action: return a finished game back to the lobby so it can be replayed. */
 export interface ReturnToLobbyMessage {
@@ -52,9 +48,7 @@ export type ClientMessage =
   | JoinRoomMessage
   | LeaveRoomMessage
   | StartGameMessage
-  | RollDiceMessage
-  | KeepDieMessage
-  | SubmitScoreMessage
+  | GameActionMessage
   | ReturnToLobbyMessage
 
 export type ClientMessageType = ClientMessage['type']
@@ -89,18 +83,25 @@ export interface RoomUpdateMessage {
   type: 'room_update'
   room: RoomState
 }
-/** Broadcast on every applied game action (also on start_game). */
+/**
+ * Sent on every applied game action (also on start_game). `view` is the
+ * per-player, sanitized client state produced by the game engine, so hidden
+ * information (e.g. an opponent's ship positions) never reaches the wrong
+ * client. Its concrete shape depends on `gameId`.
+ */
 export interface GameStateMessage {
   type: 'game_state'
   room: RoomState
-  game: YahtzeeGameState
+  gameId: string
+  view: unknown
 }
-/** Broadcast once when the game finishes, with final standings. */
+/** Sent once when the game finishes, with the game-specific results payload. */
 export interface GameOverMessage {
   type: 'game_over'
   room: RoomState
-  game: YahtzeeGameState
-  results: FinalScore[]
+  gameId: string
+  view: unknown
+  results: unknown
 }
 export interface ErrorMessage {
   type: 'error'

@@ -1,8 +1,6 @@
 import { create } from 'zustand'
 import type { RoomState } from '@shared/types'
 import type { ServerErrorCode, ServerMessage } from '@shared/protocol'
-import type { Category } from '@shared/yahtzee/categories'
-import type { FinalScore, YahtzeeGameState } from '@shared/yahtzee/engine'
 import { MULTIPLAYER_SERVER_URL } from '../config'
 import { Connection } from '../net/connection'
 
@@ -12,8 +10,12 @@ interface MultiplayerState {
   connectionStatus: ConnectionStatus
   selfId: string | null
   room: RoomState | null
-  game: YahtzeeGameState | null
-  results: FinalScore[] | null
+  /** Id of the game currently in progress (matches a registry game id). */
+  gameId: string | null
+  /** The per-player, game-specific client view. Shape depends on `gameId`. */
+  view: unknown | null
+  /** Game-specific final results payload, present once the game is over. */
+  results: unknown | null
   /** Last user-facing error, if any. */
   error: string | null
 
@@ -21,9 +23,8 @@ interface MultiplayerState {
   join: (code: string, playerName: string) => Promise<void>
   leave: () => void
   startGame: () => void
-  rollDice: () => void
-  keepDie: (index: number) => void
-  submitScore: (category: Category) => void
+  /** Send a game-specific action to the authoritative server. */
+  sendAction: (action: unknown) => void
   returnToLobby: () => void
   clearError: () => void
 }
@@ -37,10 +38,10 @@ const ERROR_TEXT: Record<ServerErrorCode, string> = {
   INVALID_CODE: 'Please enter a valid room code.',
   NOT_HOST: 'Only the host can do that.',
   GAME_ALREADY_STARTED: 'That game has already started.',
-  NOT_ENOUGH_PLAYERS: 'You need at least 2 players to start.',
+  NOT_ENOUGH_PLAYERS: 'You do not have enough players to start.',
   NOT_IN_ROOM: 'You are not in a room anymore.',
   INVALID_ACTION: 'That move is not allowed right now.',
-  NOT_YOUR_TURN: "It is not your turn.",
+  NOT_YOUR_TURN: 'It is not your turn.',
   GAME_OVER: 'The game has already finished.',
   MALFORMED: 'Something went wrong communicating with the server.',
   NAME_REQUIRED: 'A display name is required.',
@@ -57,15 +58,21 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => {
         set((state) => ({
           room: message.room,
           // Returning to the lobby clears any finished game.
-          game: message.room.status === 'lobby' ? null : state.game,
+          gameId: message.room.status === 'lobby' ? null : state.gameId,
+          view: message.room.status === 'lobby' ? null : state.view,
           results: message.room.status === 'lobby' ? null : state.results
         }))
         break
       case 'game_state':
-        set({ room: message.room, game: message.game, results: null })
+        set({ room: message.room, gameId: message.gameId, view: message.view, results: null })
         break
       case 'game_over':
-        set({ room: message.room, game: message.game, results: message.results })
+        set({
+          room: message.room,
+          gameId: message.gameId,
+          view: message.view,
+          results: message.results
+        })
         break
       case 'error':
         set({ error: ERROR_TEXT[message.code] ?? message.message })
@@ -83,7 +90,8 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => {
           connectionStatus: 'error',
           error: 'Connection to the server was lost.',
           room: null,
-          game: null,
+          gameId: null,
+          view: null,
           results: null,
           selfId: null
         })
@@ -107,7 +115,8 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => {
     connectionStatus: 'idle',
     selfId: null,
     room: null,
-    game: null,
+    gameId: null,
+    view: null,
     results: null,
     error: null,
 
@@ -129,7 +138,8 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => {
         connectionStatus: 'idle',
         selfId: null,
         room: null,
-        game: null,
+        gameId: null,
+        view: null,
         results: null,
         error: null
       })
@@ -138,14 +148,8 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => {
     startGame() {
       connection?.send({ type: 'start_game' })
     },
-    rollDice() {
-      connection?.send({ type: 'roll_dice' })
-    },
-    keepDie(index) {
-      connection?.send({ type: 'keep_die', index })
-    },
-    submitScore(category) {
-      connection?.send({ type: 'submit_score', category })
+    sendAction(action) {
+      connection?.send({ type: 'game_action', action })
     },
     returnToLobby() {
       connection?.send({ type: 'return_to_lobby' })
@@ -160,10 +164,4 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => {
 /** Convenience selector: is the local player the room host? */
 export function selectIsHost(state: MultiplayerState): boolean {
   return Boolean(state.room && state.selfId && state.room.hostId === state.selfId)
-}
-
-/** Convenience selector: is it the local player's turn in the active game? */
-export function selectIsMyTurn(state: MultiplayerState): boolean {
-  if (!state.game || !state.selfId || state.game.status !== 'playing') return false
-  return state.game.playerOrder[state.game.currentPlayerIndex] === state.selfId
 }

@@ -1,8 +1,8 @@
 # Game Hub
 
 A polished desktop **multiplayer game launcher** built with React, TypeScript and Electron.
-It is designed as a small platform that can host many games; the first (and currently only)
-playable game is **Yahtzee**.
+It is designed as a small platform that can host many games; the current games are
+**Yahtzee** (2–6 players) and **Battleships** (1v1).
 
 Players choose a display name, browse a home screen of available games, then **host** or
 **join** a real-time multiplayer match over WebSockets and play a complete game together.
@@ -13,6 +13,7 @@ Players choose a display name, browse a home screen of available games, then **h
 
 - 🎮 **Games launcher** — a home screen that renders from an extensible game registry.
 - 🎲 **Complete Yahtzee** — all 13 categories, upper-section subtotal + 35-point bonus, and full turn logic.
+- 🚢 **Complete Battleships** — 1v1 naval duel on a 10×10 grid with server-generated random fleets, turn-based firing, and hidden-information state (an opponent's unsunk ship positions are never sent to your client).
 - 🌐 **Real multiplayer** — a standalone authoritative WebSocket server relays and validates state, so it works across separate computers.
 - 🏠 **Host / Join** — short human-readable room codes (e.g. `K7P4Q`), lobbies, and up to 6 players.
 - 🔒 **Secure Electron** — `contextIsolation: true`, `nodeIntegration: false`, a minimal preload bridge, and a strict CSP.
@@ -53,20 +54,33 @@ Players choose a display name, browse a home screen of available games, then **h
 │
 ├── shared/                 # Code shared by BOTH server and renderer
 │   ├── types.ts            #   RoomState / RoomPlayer, limits
-│   ├── protocol.ts         #   strongly typed client/server messages
-│   └── yahtzee/            #   pure, framework-free game logic
-│       ├── dice.ts         #     rollDice / rerollDice
-│       ├── categories.ts   #     category ids, labels, hints
-│       ├── scoring.ts      #     scoreCategory, calculatePossibleScores, totals
-│       ├── engine.ts       #     game state machine + validated actions
-│       └── *.test.ts       #     unit tests
+│   ├── protocol.ts         #   strongly typed client/server messages (generic game_action)
+│   ├── games/              #   game-agnostic engine abstraction
+│   │   ├── types.ts        #     GameEngine interface (create/apply/view/results)
+│   │   └── registry.ts     #     maps a game id to its engine
+│   ├── yahtzee/            #   pure, framework-free Yahtzee logic
+│   │   ├── dice.ts         #     rollDice / rerollDice
+│   │   ├── categories.ts   #     category ids, labels, hints
+│   │   ├── scoring.ts      #     scoreCategory, calculatePossibleScores, totals
+│   │   ├── engine.ts       #     game state machine + validated actions
+│   │   ├── game.ts         #     GameEngine adapter
+│   │   └── *.test.ts       #     unit tests
+│   └── battleships/        #   pure, framework-free Battleships logic
+│       ├── types.ts        #     coordinates, ships, fleet definitions
+│       ├── engine.ts       #     fleet generation, shots, sinking, game state
+│       ├── view.ts         #     getPlayerView — sanitized per-player state
+│       ├── game.ts         #     GameEngine adapter
+│       └── *.test.ts       #     unit tests (incl. hidden-information security)
 │
 ├── src/renderer/           # React application (the UI)
-│   ├── games/registry.ts   #   the extensible game registry
+│   ├── games/registry.ts   #   the extensible game registry (home-screen cards)
+│   ├── games/ui.ts         #   maps a game id to its in-game / game-over components
+│   ├── games/yahtzee/      #   Yahtzee screen adapters
+│   ├── games/battleships/  #   Battleships components (Board, Cell, FleetStatus, …)
 │   ├── net/connection.ts   #   typed WebSocket client wrapper
 │   ├── store/              #   Zustand stores (profile + multiplayer)
 │   ├── components/         #   reusable UI (Button, Die, Scorecard, Modal, …)
-│   ├── screens/            #   Home, Yahtzee menu, Join, Lobby, Game, Game over
+│   ├── screens/            #   Home, game menu, Join, Lobby, Game, Game over
 │   ├── App.tsx             #   top-level navigation
 │   └── config.ts           #   reads VITE_MULTIPLAYER_SERVER_URL
 │
@@ -77,8 +91,9 @@ Players choose a display name, browse a home screen of available games, then **h
 
 **Separation of concerns**
 
-- **Game rules** live only in `shared/yahtzee` as pure functions — no React, no sockets.
-- **Networking** lives in `server/` (authoritative) and `src/renderer/net` + `store/multiplayerStore.ts` (client). Neither imports Yahtzee UI.
+- **Game rules** live in `shared/<game>` as pure functions — no React, no sockets. Each game exposes a `GameEngine` (`shared/games/types.ts`) and registers it in `shared/games/registry.ts`.
+- **Networking** is game-agnostic: `server/` (authoritative) and `src/renderer/net` + `store/multiplayerStore.ts` (client) speak one generic `game_action` / per-player `view` protocol and never special-case a particular game.
+- **Hidden information is server-enforced.** The server keeps full authoritative state and sends each client only its own sanitized `getPlayerView` — e.g. a Battleships opponent's unsunk ship positions are never transmitted, not merely hidden with CSS.
 - The **renderer never mutates game state directly**; it sends intents and renders the state the server broadcasts back.
 
 ---
@@ -193,11 +208,18 @@ In `.env` (and `.env.example`) as `VITE_MULTIPLAYER_SERVER_URL`, consumed once i
 
 ## Adding another game later
 
-The launcher is built around a registry, so Yahtzee is not special-cased in the shell.
+The multiplayer core is game-agnostic — no game is special-cased in the server or the shell.
+Adding a game is entirely additive:
 
-1. Add the game's pure logic under `shared/<game>/` (rules, state, scoring).
-2. Add its screens/components under `src/renderer/screens` and `components`.
-3. Append an entry to `GAMES` in [`src/renderer/games/registry.ts`](src/renderer/games/registry.ts):
+1. Add the game's pure logic under `shared/<game>/` (rules, state) and implement a
+   `GameEngine` (`shared/games/types.ts`) exposing `createGame`, `validateAction`,
+   `applyAction`, `removePlayer`, `getPlayerView`, `isFinished` and `getResults`.
+2. Register the engine in [`shared/games/registry.ts`](shared/games/registry.ts). The server
+   now runs it — player limits, turn handling, disconnects and per-player state serialization
+   all flow through the engine, with **no** `if (gameId === …)` branches.
+3. Build the game's components under `src/renderer/games/<game>/` and register their in-game /
+   game-over screens in [`src/renderer/games/ui.ts`](src/renderer/games/ui.ts).
+4. Append an entry to `GAMES` in [`src/renderer/games/registry.ts`](src/renderer/games/registry.ts):
 
    ```ts
    {
@@ -212,8 +234,7 @@ The launcher is built around a registry, so Yahtzee is not special-cased in the 
    }
    ```
 
-4. Route the new `gameId` in `App.tsx` and, if it needs server-side rules, branch on
-   `room.gameId` in the server. The home screen, cards and Play buttons update automatically.
+The home screen, cards, Play buttons, lobby, and networking update automatically.
 
 ---
 

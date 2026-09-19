@@ -1,0 +1,32 @@
+.board {
+  width: 100%;
+}
+
+.grid {
+  display: grid;
+  /* A label gutter column, then 10 equal cell columns. */
+  grid-template-columns: minmax(18px, 0.6fr) repeat(10, 1fr);
+  gap: 2px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2px;
+}
+
+.corner {
+  background: transparent;
+}
+
+.colLabel,
+.rowLabel {
+  display: grid;
+  place-items: center;
+  font-size: clamp(10px, 1.6vw, 13px);
+  font-weight: 700;
+  color: var(--text-faint);
+  background: transparent;
+}
+
+.colLabel {
+  aspect-ratio: 1;
+}

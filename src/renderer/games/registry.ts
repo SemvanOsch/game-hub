@@ -28,6 +28,16 @@ export const GAMES: GameDefinition[] = [
     minPlayers: 2,
     maxPlayers: 6,
     available: true
+  },
+  {
+    id: 'battleships',
+    name: 'Battleships',
+    description: "Find and sink your opponent's fleet. Fire across a 10×10 grid in this 1v1 naval duel.",
+    icon: '🚢',
+    multiplayer: true,
+    minPlayers: 2,
+    maxPlayers: 2,
+    available: true
   }
 ]
 

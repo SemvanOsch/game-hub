@@ -1,0 +1,182 @@
+.cell {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  font-size: clamp(12px, 2.2vw, 18px);
+  font-weight: 800;
+  line-height: 1;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  user-select: none;
+  padding: 0;
+}
+
+/* Own board water: clearly a calm sea, distinct from the grid frame. */
+.water {
+  background: color-mix(in srgb, #2f6fb0 24%, var(--surface));
+}
+
+/* Enemy "fog of war": a legible, textured tile that stands off the background. */
+.unknown {
+  background: repeating-linear-gradient(
+      45deg,
+      color-mix(in srgb, #3a7cc0 20%, var(--surface-2)),
+      color-mix(in srgb, #3a7cc0 20%, var(--surface-2)) 6px,
+      color-mix(in srgb, #3a7cc0 12%, var(--surface-2)) 6px,
+      color-mix(in srgb, #3a7cc0 12%, var(--surface-2)) 12px
+    );
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #5fb0ff 22%, transparent);
+}
+
+/* Own ship cells — tinted with the ship's own color. */
+.ship {
+  background: color-mix(in srgb, var(--ship-color, var(--surface-3)) 26%, var(--surface-3));
+}
+
+/* Miss: subtle, with a dot symbol. */
+.miss {
+  background: var(--bg-2);
+  color: var(--text-faint);
+}
+
+/* Hit: danger tone + ✕. */
+.hit {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* Sunk: stronger, filled danger. */
+.sunk {
+  background: var(--danger);
+  color: var(--accent-contrast);
+}
+
+/* ---------------------------------------------------------------------------
+ * Ship outlines: a colored border encasing each ship, so adjacent ships are
+ * easy to differentiate. Only the outer edges of a ship get the color.
+ * ------------------------------------------------------------------------- */
+.shipCell {
+  z-index: 1;
+}
+.edgeTop {
+  border-top: 3px solid var(--ship-color);
+}
+.edgeRight {
+  border-right: 3px solid var(--ship-color);
+}
+.edgeBottom {
+  border-bottom: 3px solid var(--ship-color);
+}
+.edgeLeft {
+  border-left: 3px solid var(--ship-color);
+}
+
+/* Interactive (enemy) cells the player can fire at. */
+.interactive {
+  cursor: pointer;
+  transition: background 0.1s ease, transform 0.05s ease;
+}
+.interactive:hover {
+  background: var(--accent-soft);
+}
+.interactive:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* The targeted shot: clearly marked before firing. */
+.targeted {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.targeted::after {
+  content: '⌖';
+  color: var(--accent);
+  font-size: clamp(14px, 2.6vw, 20px);
+}
+
+/* ---------------------------------------------------------------------------
+ * Shot animations — played once on the cell that was just fired at.
+ * Hit: a sharp red impact + expanding shockwave ring.
+ * Miss: a softer splash + bluish ripple.
+ * ------------------------------------------------------------------------- */
+.animHit {
+  animation: bs-hit-pop 0.45s ease-out;
+  z-index: 3;
+}
+.animHit::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 3px;
+  pointer-events: none;
+  animation: bs-hit-ring 0.55s ease-out forwards;
+}
+@keyframes bs-hit-pop {
+  0% {
+    transform: scale(0.35);
+  }
+  45% {
+    transform: scale(1.28);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes bs-hit-ring {
+  0% {
+    box-shadow: 0 0 6px 6px rgba(255, 107, 107, 0.75);
+    opacity: 1;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);
+    opacity: 0;
+  }
+}
+
+.animMiss {
+  animation: bs-miss-pop 0.5s ease-out;
+  z-index: 3;
+}
+.animMiss::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: bs-miss-ripple 0.6s ease-out forwards;
+}
+@keyframes bs-miss-pop {
+  0% {
+    transform: scale(0.6);
+  }
+  55% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes bs-miss-ripple {
+  0% {
+    box-shadow: 0 0 0 2px rgba(150, 190, 230, 0.65);
+    opacity: 1;
+    transform: scale(0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 3px rgba(150, 190, 230, 0);
+    opacity: 0;
+    transform: scale(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animHit,
+  .animMiss,
+  .animHit::before,
+  .animMiss::before {
+    animation: none;
+  }
+}
