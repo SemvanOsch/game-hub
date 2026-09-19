@@ -1,0 +1,138 @@
+.wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.corner,
+.playerHead,
+.rowHead {
+  text-align: left;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  padding: 12px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+.corner {
+  color: var(--text-faint);
+  font-weight: 600;
+  width: 42%;
+}
+
+.playerHead {
+  text-align: center;
+  position: relative;
+}
+.playerName {
+  font-weight: 650;
+}
+.youTag {
+  color: var(--text-faint);
+  font-weight: 400;
+  font-size: 11px;
+}
+.turnDot {
+  display: block;
+  width: 6px;
+  height: 6px;
+  margin: 4px auto 0;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.row:hover {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.rowHead {
+  padding: 8px 14px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+}
+.catLabel {
+  display: block;
+}
+.catHint {
+  display: block;
+  font-size: 11px;
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+.cell {
+  padding: 6px 10px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.currentCol {
+  background: var(--accent-soft);
+}
+
+.score {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.empty {
+  color: var(--text-faint);
+}
+
+.preview {
+  min-width: 40px;
+  padding: 5px 10px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--accent-hover);
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+.preview:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.sectionRow td {
+  padding: 8px 14px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.subtotalRow .rowHead,
+.subtotalRow .cell {
+  background: var(--bg-2);
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.totalRow .rowHead,
+.totalRow .cell {
+  background: var(--surface-2);
+  font-weight: 700;
+  font-size: 15px;
+}
+.totalRow .score {
+  color: var(--text);
+}

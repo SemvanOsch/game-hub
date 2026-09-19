@@ -1,0 +1,106 @@
+.screen {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-6);
+  animation: fade-in 0.2s ease;
+}
+
+.hero {
+  margin-bottom: var(--space-7);
+}
+.greeting {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 15px;
+}
+.name {
+  font-size: 38px;
+  margin: 2px 0 6px;
+  background: linear-gradient(120deg, var(--text), var(--accent-hover));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.subtitle {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+.sectionHeader h2 {
+  font-size: 20px;
+}
+.count {
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-5);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  transition: transform 0.12s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow);
+}
+
+.icon {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+  background: var(--accent-soft);
+  border-radius: var(--radius);
+  margin-bottom: var(--space-4);
+}
+
+.cardBody {
+  flex: 1;
+}
+.cardTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+.cardTitleRow h3 {
+  font-size: 18px;
+}
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+.desc {
+  margin: 0 0 var(--space-5);
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.cardFooter {
+  margin-top: auto;
+}

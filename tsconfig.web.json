@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "useDefineForClassFields": true,
+    "types": ["vite/client"],
+    "paths": {
+      "@shared/*": ["shared/*"],
+      "@/*": ["src/renderer/*"]
+    }
+  },
+  "include": ["src/renderer", "shared"]
+}

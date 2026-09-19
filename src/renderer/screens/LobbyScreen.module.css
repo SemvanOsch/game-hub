@@ -1,0 +1,154 @@
+.screen {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  animation: fade-in 0.2s ease;
+}
+
+.panel {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-7) var(--space-6) var(--space-6);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.leave {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+}
+.leave:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--text-faint);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.code {
+  display: inline-block;
+  margin: var(--space-2) 0 var(--space-1);
+  padding: 6px 18px;
+  font-family: var(--font-mono);
+  font-size: 46px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--accent-hover);
+  background: none;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.code:hover {
+  background: var(--accent-soft);
+}
+
+.copyHint {
+  margin: 0 0 var(--space-6);
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.playersHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  text-align: left;
+  margin-bottom: var(--space-3);
+}
+.playersHeader h2 {
+  font-size: 16px;
+}
+.playerCount {
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.playerList {
+  list-style: none;
+  margin: 0 0 var(--space-6);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.playerItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-align: left;
+}
+.empty {
+  opacity: 0.5;
+  border-style: dashed;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.playerName {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+.you {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+.hostTag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-hover);
+  background: var(--accent-soft);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+}
+
+.footer {
+  text-align: center;
+}
+.note,
+.waiting {
+  margin: var(--space-3) 0 0;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+.waiting {
+  padding: var(--space-3);
+}

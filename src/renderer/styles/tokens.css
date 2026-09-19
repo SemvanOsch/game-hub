@@ -1,0 +1,49 @@
+:root {
+  /* Surfaces (dark, neutral game aesthetic) */
+  --bg: #0f1115;
+  --bg-2: #14171d;
+  --surface: #1a1e26;
+  --surface-2: #222833;
+  --surface-3: #2b3240;
+  --border: #2c333f;
+  --border-strong: #3a4250;
+
+  /* Text */
+  --text: #eef1f6;
+  --text-dim: #a4adbd;
+  --text-faint: #6b7484;
+
+  /* Brand / accent */
+  --accent: #6d7cff;
+  --accent-hover: #8290ff;
+  --accent-soft: rgba(109, 124, 255, 0.16);
+  --accent-contrast: #0b0d12;
+
+  /* States */
+  --success: #43c59e;
+  --danger: #ff6b6b;
+  --danger-soft: rgba(255, 107, 107, 0.14);
+  --warning: #f4c063;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.45);
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --font: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Cascadia Code', 'SF Mono', 'Consolas', ui-monospace, monospace;
+}
