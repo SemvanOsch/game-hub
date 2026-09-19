@@ -38,6 +38,17 @@ export const GAMES: GameDefinition[] = [
     minPlayers: 2,
     maxPlayers: 2,
     available: true
+  },
+  {
+    id: 'blackjack',
+    name: 'Blackjack',
+    description:
+      'Beat the dealer and outlast your opponents. First to 1,000 chips — or the last player standing — wins the match.',
+    icon: '🃏',
+    multiplayer: true,
+    minPlayers: 2,
+    maxPlayers: 6,
+    available: true
   }
 ]
 

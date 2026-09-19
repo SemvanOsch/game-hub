@@ -1,0 +1,290 @@
+.screen {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-6) var(--space-7);
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.leave {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+}
+.leave:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.handInfo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+.handNo {
+  font-weight: 700;
+  font-size: 15px;
+}
+.dealerRule {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* Green felt table area holding the dealer. */
+.dealer {
+  background:
+    radial-gradient(120% 140% at 50% -20%, rgba(255, 255, 255, 0.06), transparent 60%),
+    linear-gradient(160deg, #1f6f4a, #14503a);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-5) var(--space-6);
+  box-shadow: var(--shadow), inset 0 0 60px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+.dealerHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  color: #eafff4;
+}
+.dealerHead h2 {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.total {
+  font-size: 14px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, 0.3);
+  color: #eafff4;
+}
+.bustText {
+  background: var(--danger-soft);
+  color: #ffd7d7;
+}
+
+.banner {
+  text-align: center;
+  margin: var(--space-4) 0;
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--text);
+  min-height: 22px;
+}
+
+.others {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.seat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 132px;
+}
+.seat.current {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 20px var(--glow);
+}
+.eliminatedSeat {
+  opacity: 0.55;
+}
+.seatHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.seatName {
+  font-weight: 650;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.offline {
+  color: var(--danger);
+  font-weight: 500;
+  font-size: 11px;
+}
+.seatFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: auto;
+}
+.seatTotal {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+.seatChips {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+/* Local player panel. */
+.self {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'info controls'
+    'hand controls';
+  gap: var(--space-3) var(--space-5);
+  align-items: center;
+}
+.self.current {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 24px var(--glow);
+}
+.selfInfo {
+  grid-area: info;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.selfName {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 700;
+  font-size: 15px;
+}
+.chips {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.chipVal {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--accent-hover);
+}
+.chipLabel {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.bet {
+  margin-left: var(--space-2);
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text-dim);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+}
+.selfHand {
+  grid-area: hand;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 92px;
+}
+.selfTotal {
+  font-size: 28px;
+  font-weight: 800;
+}
+.spectating {
+  color: var(--text-faint);
+  font-size: 13px;
+  font-style: italic;
+}
+.controls {
+  grid-area: controls;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 150px;
+}
+.waitNote {
+  color: var(--text-faint);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Badges. */
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.badgeNeutral {
+  background: var(--surface-3);
+  color: var(--text-dim);
+}
+.badgeWin {
+  background: rgba(67, 197, 158, 0.18);
+  color: var(--success);
+}
+.badgeLose {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.badgePush {
+  background: rgba(244, 192, 99, 0.18);
+  color: var(--warning);
+}
+
+@media (max-width: 720px) {
+  .screen {
+    padding: var(--space-4) var(--space-4) var(--space-6);
+  }
+  .self {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'info'
+      'hand'
+      'controls';
+  }
+  .controls {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .controls > * {
+    flex: 1 1 auto;
+  }
+}

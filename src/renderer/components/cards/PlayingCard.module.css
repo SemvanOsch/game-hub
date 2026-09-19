@@ -1,0 +1,143 @@
+/* A designed playing card. Cards are always light (as real cards are), so they
+ * read clearly on the felt table in every app theme. */
+.card {
+  --card-w: 72px;
+  --card-radius: calc(var(--card-w) * 0.11);
+  width: var(--card-w);
+  aspect-ratio: 5 / 7;
+  border-radius: var(--card-radius);
+  position: relative;
+  flex: 0 0 auto;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.08) inset;
+  user-select: none;
+}
+
+.sm {
+  --card-w: 48px;
+}
+.md {
+  --card-w: 72px;
+}
+.lg {
+  --card-w: 96px;
+}
+
+.face {
+  background: linear-gradient(160deg, #ffffff, #f2f4f8);
+  color: #1a1e26;
+}
+.red {
+  color: #d3324a;
+}
+.black {
+  color: #1a1e26;
+}
+
+.corner {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0.92;
+  font-weight: 800;
+}
+.tl {
+  top: calc(var(--card-w) * 0.07);
+  left: calc(var(--card-w) * 0.08);
+}
+.br {
+  bottom: calc(var(--card-w) * 0.07);
+  right: calc(var(--card-w) * 0.08);
+  transform: rotate(180deg);
+}
+.rank {
+  font-size: calc(var(--card-w) * 0.24);
+  letter-spacing: -0.03em;
+}
+.cornerSuit {
+  font-size: calc(var(--card-w) * 0.2);
+}
+
+.pip {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--card-w) * 0.5);
+  opacity: 0.92;
+}
+
+/* Face-down back: patterned so a hidden card is unmistakable and never leaks
+ * any information (the real card is not sent to the client at all). */
+.back {
+  background: linear-gradient(150deg, var(--accent), var(--accent-hover));
+  overflow: hidden;
+}
+.backArt {
+  position: absolute;
+  inset: calc(var(--card-w) * 0.06);
+  border-radius: calc(var(--card-radius) * 0.7);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  background-image: repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.14) 0,
+      rgba(255, 255, 255, 0.14) 3px,
+      transparent 3px,
+      transparent 8px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.14) 0,
+      rgba(255, 255, 255, 0.14) 3px,
+      transparent 3px,
+      transparent 8px
+    );
+}
+
+/* Dealt in from the deck: slides down from above with a slight tilt. */
+.deal {
+  animation: card-deal 0.5s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+  transform-origin: center bottom;
+}
+
+@keyframes card-deal {
+  from {
+    opacity: 0;
+    transform: translateY(-34px) translateX(-14px) rotate(-9deg) scale(0.9);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Flipped face-up (the dealer's hole card on reveal). */
+.flip {
+  animation: card-flip 0.55s cubic-bezier(0.35, 0, 0.2, 1) both;
+  transform-origin: center;
+}
+
+@keyframes card-flip {
+  from {
+    transform: rotateY(-90deg) scale(0.98);
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    transform: rotateY(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deal,
+  .flip {
+    animation: none;
+  }
+}

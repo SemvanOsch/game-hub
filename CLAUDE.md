@@ -7,6 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Game Hub — a desktop **multiplayer game launcher** (React + TypeScript + Electron) with an
 authoritative WebSocket server. Games: **Yahtzee** (2–6 players) and **Battleships** (1v1).
 
+Optional **accounts** add friends, per-game win/loss records, and direct game invites. Login is
+optional — guests still play with just a display name; logging in unlocks the social features.
+
 ## Commands
 
 ```bash
@@ -26,7 +29,12 @@ npm run build:app      # build + electron-builder -> release/  (packaged install
 
 There is no linter configured. Always run `npm run typecheck` before considering a change done —
 `build` runs it too. Vitest only collects `shared/**/*.test.ts` and `server/**/*.test.ts` in a
-Node environment (see `vitest.config.ts`); there are no renderer/DOM tests.
+Node environment (see `vitest.config.ts`); there are no renderer/DOM tests. Server tests use an
+in-memory SQLite DB (`createDb(':memory:')`).
+
+`build:app` sets `npmRebuild: false` (in `package.json`'s `build` field) on purpose:
+`better-sqlite3` is a **server-only** native module, and the packaged desktop app (bundled into
+`out/`) never loads it — so electron-builder must not try to native-rebuild it for Electron's ABI.
 
 ## Layout & TypeScript projects
 
@@ -48,7 +56,9 @@ Understanding this is the key to being productive here.
 
 - **`shared/games/types.ts`** defines `GameEngine<S, V, A, R>`: `createGame`, `validateAction`
   (parses untrusted client input), `applyAction` (authoritative reducer), `removePlayer`,
-  `getPlayerView` (sanitizes state per player), `isFinished`, `getResults`.
+  `getPlayerView` (sanitizes state per player), `isFinished`, `getResults`, and `getWinnerIds`
+  (player ids of the winner(s), handling ties — lets the server record match results with no
+  per-game branching).
 - **`shared/games/registry.ts`** maps a game id → its engine. This is the single server dispatch
   point. Each game implements the engine in a `game.ts` adapter that wraps its pure rules
   (`shared/yahtzee/`, `shared/battleships/`).
@@ -60,7 +70,8 @@ Understanding this is the key to being productive here.
 **Protocol (`shared/protocol.ts`) is generic.** Clients send intents; the server validates and
 broadcasts. In-game moves use one `game_action { action: unknown }` message (the engine validates
 the payload). The server replies with `game_state`/`game_over` carrying a per-player `view` — never
-the raw authoritative state. Do not add per-move message types.
+the raw authoritative state. Do not add per-move message types. (Account/friend/invite messages
+are a separate, non-game concern — see below.)
 
 **Hidden information is server-enforced.** The authoritative state holds everything (e.g. both
 Battleships fleets); `getPlayerView` strips what a player may not see (an opponent's unsunk ship
@@ -73,17 +84,50 @@ gameId → its in-game and game-over React components; `src/renderer/App.tsx` lo
 instead of branching. Home-screen cards come from `src/renderer/games/registry.ts` (separate from
 the server engine registry). Game rule logic stays in `shared/<game>/`; components call actions.
 
+**One shared socket.** `src/renderer/net/socket.ts` owns the single WebSocket; both
+`multiplayerStore` (rooms/games) and `authStore` (accounts/friends) subscribe via `onServerMessage`
+and each handles only the message types it cares about. Leaving a room keeps the socket open (the
+auth session lives on it). Don't create a second connection.
+
+## Accounts, friends & records
+
+The persistence layer is the only stateful part of the server; keep it out of game rules.
+
+- **`server/src/db.ts`** — SQLite (`better-sqlite3`, synchronous). Tables: `users`, `friendships`,
+  `match_results` + `match_participants`. Path from `DATA_DIR`/`DB_PATH` (default `./data/`).
+  `GameServer`'s constructor takes a `DB` so tests can inject `:memory:`.
+- **`server/src/auth.ts`** — scrypt password hashing (built-in `crypto`, never plaintext) and an
+  in-memory `SessionStore` (token → userId) so a reconnecting client resumes via `resume_session`.
+- **`server/src/friends.ts`** — friendship graph (request/accept/decline), presence-aware friends
+  payload, and head-to-head record tallies.
+- **`GameServer`** tracks presence as `Map<userId, Set<WebSocket>>` (multi-window safe) and pushes
+  `friends_update` when anything changes. A finished match is recorded **only when every
+  participant is a logged-in account** (guest/mixed rooms are skipped), via `Room.getMatchOutcome()`
+  + `engine.getWinnerIds`.
+
+**Invites** reuse the room-code join path: `invite_to_room { toUserId }` → the server pushes
+`game_invite { fromUser, code, gameId }` to the online friend, who accepts by sending a normal
+`join_room` with that code. No separate join logic.
+
+**Login is optional.** Guests use a display-name only (`profileStore`); logged-in users play under
+their username. Keep guest quick-play working when touching the auth/friends flow.
+
 ## Adding a game
 
-1. Pure rules + a `GameEngine` in `shared/<game>/`, registered in `shared/games/registry.ts`.
+1. Pure rules + a `GameEngine` in `shared/<game>/`, registered in `shared/games/registry.ts`
+   (implement all engine methods, including `getWinnerIds` so records work).
 2. Components in `src/renderer/games/<game>/`, registered in `src/renderer/games/ui.ts`.
 3. A card entry in `src/renderer/games/registry.ts`.
 
-The lobby, rooms, networking, disconnect handling, and per-player serialization then work
-automatically.
+The lobby, rooms, networking, disconnect handling, per-player serialization, records, and invites
+then work automatically.
 
 ## Server URL config
 
 The renderer reads `VITE_MULTIPLAYER_SERVER_URL` (via `src/renderer/config.ts`), defaulting to
 `ws://localhost:3001`. `.env` sets it for local dev; `.env.production` bakes the public `wss://`
 URL into `build:app`. The server port comes from `PORT` / `MULTIPLAYER_SERVER_PORT` (default 3001).
+
+The SQLite file path comes from `DATA_DIR`/`DB_PATH`. On a cloud host, point `DATA_DIR` at a
+**persistent disk** or accounts/records reset on redeploy. Passwords travel over TLS in prod
+(`wss://`); local dev is plaintext `ws://` (fine for localhost).

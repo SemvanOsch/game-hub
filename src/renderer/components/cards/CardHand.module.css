@@ -1,0 +1,18 @@
+.hand {
+  display: flex;
+  align-items: flex-end;
+  /* Gives the hole-card flip a sense of depth. */
+  perspective: 900px;
+}
+
+/* Overlap cards a little so a big hand stays compact, sized per card scale. */
+.hand > * + * {
+  margin-left: -22px;
+}
+.sm > * + * {
+  margin-left: -16px;
+}
+.lg > * + * {
+  margin-left: -30px;
+}
+
