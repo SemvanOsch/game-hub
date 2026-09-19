@@ -22,7 +22,7 @@
 
 .held {
   outline-color: var(--accent);
-  background: linear-gradient(160deg, #eef0ff, #c8cffb);
+  background: linear-gradient(160deg, #ffffff, #dfe4ee);
   transform: translateY(-3px);
 }
 

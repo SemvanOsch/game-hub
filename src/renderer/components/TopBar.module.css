@@ -4,8 +4,7 @@
   justify-content: space-between;
   padding: var(--space-3) var(--space-6);
   border-bottom: 1px solid var(--border);
-  background: rgba(20, 23, 29, 0.6);
-  backdrop-filter: blur(8px);
+  background: var(--bg-2);
   -webkit-app-region: drag;
 }
 

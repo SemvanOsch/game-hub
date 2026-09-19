@@ -13,11 +13,13 @@
   --text-dim: #a4adbd;
   --text-faint: #6b7484;
 
-  /* Brand / accent */
+  /* Brand / accent (default: Purple) */
   --accent: #6d7cff;
   --accent-hover: #8290ff;
   --accent-soft: rgba(109, 124, 255, 0.16);
   --accent-contrast: #0b0d12;
+  /* Ambient background glow (follows the accent). */
+  --glow: rgba(109, 124, 255, 0.14);
 
   /* States */
   --success: #43c59e;
@@ -46,4 +48,61 @@
 
   --font: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
   --font-mono: 'Cascadia Code', 'SF Mono', 'Consolas', ui-monospace, monospace;
+}
+
+/* ---------------------------------------------------------------------------
+ * Themes. Each overrides only what it needs; the accent variants keep the dark
+ * surfaces, while "light" also swaps the surface/text palette.
+ * Applied via <html data-theme="..."> (see themeStore).
+ * ------------------------------------------------------------------------- */
+
+/* Dark · Red */
+:root[data-theme='red'] {
+  --accent: #ff5d63;
+  --accent-hover: #ff7a80;
+  --accent-soft: rgba(255, 93, 99, 0.16);
+  --accent-contrast: #150607;
+  --glow: rgba(255, 93, 99, 0.14);
+}
+
+/* Dark · Green */
+:root[data-theme='green'] {
+  --accent: #35c98d;
+  --accent-hover: #4dda9f;
+  --accent-soft: rgba(53, 201, 141, 0.16);
+  --accent-contrast: #04130d;
+  --glow: rgba(53, 201, 141, 0.13);
+}
+
+/* Dark · Light Blue */
+:root[data-theme='blue'] {
+  --accent: #38bdf8;
+  --accent-hover: #5fccfa;
+  --accent-soft: rgba(56, 189, 248, 0.16);
+  --accent-contrast: #04121a;
+  --glow: rgba(56, 189, 248, 0.13);
+}
+
+/* Light mode */
+:root[data-theme='light'] {
+  --bg: #eef1f7;
+  --bg-2: #e7ebf3;
+  --surface: #ffffff;
+  --surface-2: #f3f5fa;
+  --surface-3: #e5e9f1;
+  --border: #dde2ec;
+  --border-strong: #c8cfdc;
+
+  --text: #1a1e26;
+  --text-dim: #545e6e;
+  --text-faint: #8b95a6;
+
+  --accent: #5666f0;
+  --accent-hover: #4353e8;
+  --accent-soft: rgba(86, 102, 240, 0.14);
+  --accent-contrast: #ffffff;
+  --glow: rgba(86, 102, 240, 0.1);
+
+  --shadow: 0 8px 24px rgba(31, 41, 70, 0.12);
+  --shadow-lg: 0 18px 48px rgba(31, 41, 70, 0.18);
 }

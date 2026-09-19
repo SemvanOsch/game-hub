@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import styles from './Modal.module.css'
 
 interface ModalProps {
@@ -20,7 +21,9 @@ export function Modal({ open, title, children, onClose }: ModalProps) {
   }, [open, onClose])
 
   if (!open) return null
-  return (
+  // Portal to <body> so the fixed overlay is centered on the screen and not
+  // trapped inside a positioned/backdrop-filtered ancestor (e.g. the TopBar).
+  return createPortal(
     <div
       className={styles.backdrop}
       onMouseDown={(e) => {
@@ -38,6 +41,7 @@ export function Modal({ open, title, children, onClose }: ModalProps) {
         </div>
         <div className={styles.body}>{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

@@ -49,7 +49,7 @@
 }
 .myTurn {
   background: var(--accent-soft);
-  border-color: rgba(109, 124, 255, 0.4);
+  border-color: var(--accent);
 }
 .otherTurn {
   background: var(--surface);
