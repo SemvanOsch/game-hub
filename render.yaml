@@ -1,0 +1,10 @@
+# Render Blueprint — lets Render auto-configure the multiplayer server.
+# On Render: New → Blueprint → pick this repo → Apply. No manual settings needed.
+services:
+  - type: web
+    name: yahtzee-multiplayer
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run start:server
+    healthCheckPath: /health
