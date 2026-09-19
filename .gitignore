@@ -7,3 +7,9 @@ dist/
 .vite/
 tsconfig.tsbuildinfo
 *.tsbuildinfo
+
+# Local / deploy-specific env files. The committed .env.example is the template;
+# copy it to .env (dev) or .env.production (build) and fill in your values.
+.env
+.env.*
+!.env.example
