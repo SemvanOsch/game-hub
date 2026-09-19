@@ -7,7 +7,7 @@
  * persisted to localStorage so the app can resume identity on next launch.
  */
 import { create } from 'zustand'
-import type { FriendSummary, PublicUser } from '@shared/types'
+import type { FriendSummary, GameInvite, PublicUser } from '@shared/types'
 import type { ServerMessage } from '@shared/protocol'
 import { ensureConnection, onDisconnect, onServerMessage, sendMessage } from '../net/socket'
 
@@ -41,6 +41,8 @@ interface AuthState {
   friends: FriendSummary[]
   incoming: PublicUser[]
   outgoing: PublicUser[]
+  /** Incoming game invitations awaiting a response. */
+  invites: GameInvite[]
   /** Which auth request is in flight (drives spinners / silent resume). */
   pending: PendingAuth
   authError: string | null
@@ -53,6 +55,10 @@ interface AuthState {
   sendRequest: (username: string) => void
   respond: (fromUserId: string, accept: boolean) => void
   removeFriend: (userId: string) => void
+  /** Invite a friend into the room you are currently in. */
+  inviteToRoom: (toUserId: string) => void
+  /** Remove a received invite (after accepting or declining it). */
+  dismissInvite: (code: string) => void
   clearAuthError: () => void
   clearFriendError: () => void
 }
@@ -88,6 +94,18 @@ export const useAuthStore = create<AuthState>((set, get) => {
       case 'friend_error':
         set({ friendError: message.message })
         break
+      case 'game_invite':
+        set((state) => {
+          // Replace any prior invite from the same room (latest wins).
+          const others = state.invites.filter((i) => i.code !== message.code)
+          return {
+            invites: [
+              ...others,
+              { fromUser: message.fromUser, code: message.code, gameId: message.gameId }
+            ]
+          }
+        })
+        break
       // Room/game messages are handled by the multiplayer store.
     }
   }
@@ -96,7 +114,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
   onDisconnect(() => {
     // The socket dropped: show as logged out but keep the token so the next
     // resume() (e.g. on relaunch) can restore the session.
-    set({ session: null, friends: [], incoming: [], outgoing: [], pending: null })
+    set({ session: null, friends: [], incoming: [], outgoing: [], invites: [], pending: null })
   })
 
   async function authenticate(
@@ -119,6 +137,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     friends: [],
     incoming: [],
     outgoing: [],
+    invites: [],
     pending: null,
     authError: null,
     friendError: null,
@@ -143,7 +162,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     logout() {
       sendMessage({ type: 'logout' })
       persistToken(null)
-      set({ session: null, friends: [], incoming: [], outgoing: [], authError: null })
+      set({ session: null, friends: [], incoming: [], outgoing: [], invites: [], authError: null })
     },
 
     sendRequest(username) {
@@ -155,6 +174,12 @@ export const useAuthStore = create<AuthState>((set, get) => {
     },
     removeFriend(userId) {
       sendMessage({ type: 'remove_friend', userId })
+    },
+    inviteToRoom(toUserId) {
+      sendMessage({ type: 'invite_to_room', toUserId })
+    },
+    dismissInvite(code) {
+      set((state) => ({ invites: state.invites.filter((i) => i.code !== code) }))
     },
 
     clearAuthError() {

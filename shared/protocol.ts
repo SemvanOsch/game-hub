@@ -82,6 +82,11 @@ export interface RemoveFriendMessage {
   type: 'remove_friend'
   userId: string
 }
+/** Invite a friend to the sender's current room. Accepting reuses `join_room`. */
+export interface InviteToRoomMessage {
+  type: 'invite_to_room'
+  toUserId: string
+}
 
 export type ClientMessage =
   | CreateRoomMessage
@@ -97,6 +102,7 @@ export type ClientMessage =
   | FriendRequestMessage
   | RespondFriendRequestMessage
   | RemoveFriendMessage
+  | InviteToRoomMessage
 
 export type ClientMessageType = ClientMessage['type']
 
@@ -182,6 +188,13 @@ export interface FriendErrorMessage {
   type: 'friend_error'
   message: string
 }
+/** Pushed to a player when a friend invites them into a room. */
+export interface GameInviteMessage {
+  type: 'game_invite'
+  fromUser: PublicUser
+  code: string
+  gameId: string
+}
 
 export type ServerMessage =
   | JoinedMessage
@@ -192,6 +205,7 @@ export type ServerMessage =
   | AuthResultMessage
   | FriendsUpdateMessage
   | FriendErrorMessage
+  | GameInviteMessage
 
 export type ServerMessageType = ServerMessage['type']
 

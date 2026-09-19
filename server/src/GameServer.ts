@@ -13,6 +13,7 @@ import { generateUniqueRoomCode, normalizeCode } from './roomCode'
 import { createDb, resolveDbPath, type DB } from './db'
 import { authenticate, createUser, getUserById, SessionStore, type AuthResult } from './auth'
 import {
+  areFriends,
   getFriendsPayload,
   getRelatedUserIds,
   recordMatch,
@@ -117,6 +118,8 @@ export class GameServer {
         return this.onRespondFriendRequest(client, msg.fromUserId, msg.accept)
       case 'remove_friend':
         return this.onRemoveFriend(client, msg.userId)
+      case 'invite_to_room':
+        return this.onInviteToRoom(client, msg.toUserId)
       default:
         return this.sendError(client.socket, 'MALFORMED', 'Unknown message type.')
     }
@@ -395,6 +398,35 @@ export class GameServer {
 
   private sendFriendError(client: ClientState, message: string): void {
     this.send(client.socket, { type: 'friend_error', message })
+  }
+
+  /**
+   * Invite a friend into the sender's current lobby. The invitee accepts by
+   * sending a normal `join_room` with the delivered code, so no separate join
+   * path is needed. Only friends who are online can be invited.
+   */
+  private onInviteToRoom(client: ClientState, toUserId: unknown): void {
+    if (!client.userId) return this.sendFriendError(client, 'Log in to invite friends.')
+    if (typeof toUserId !== 'string') return
+    const room = this.getRoom(client)
+    if (!room) return this.sendFriendError(client, 'You are not in a room.')
+    if (room.status !== 'lobby') {
+      return this.sendFriendError(client, 'You can only invite while in the lobby.')
+    }
+    if (room.isFull()) return this.sendFriendError(client, 'This room is already full.')
+    if (!areFriends(this.db, client.userId, toUserId)) {
+      return this.sendFriendError(client, 'You can only invite friends.')
+    }
+    if (!this.isOnline(toUserId)) return this.sendFriendError(client, 'That friend is offline.')
+
+    const fromUser = getUserById(this.db, client.userId)
+    if (!fromUser) return
+    this.sendToUser(toUserId, {
+      type: 'game_invite',
+      fromUser,
+      code: room.code,
+      gameId: room.gameId
+    })
   }
 
   // --- Presence ------------------------------------------------------------

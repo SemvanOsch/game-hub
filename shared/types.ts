@@ -65,3 +65,12 @@ export interface FriendsPayload {
   /** Requests the local user has sent that are still pending. */
   outgoing: PublicUser[]
 }
+
+/** A pending invitation to join a friend's game room, as seen by the invitee. */
+export interface GameInvite {
+  fromUser: PublicUser
+  /** The room code to join on accept. */
+  code: string
+  /** The game the room is playing (matches a registry game id). */
+  gameId: string
+}

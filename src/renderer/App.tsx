@@ -6,6 +6,7 @@ import type { GameDefinition } from './games/registry'
 import { getGameUI } from './games/ui'
 import { TopBar } from './components/TopBar'
 import { Toast } from './components/Toast'
+import { InviteBanner } from './components/InviteBanner'
 import { NameDialog } from './components/NameDialog'
 import { Spinner } from './components/Spinner'
 import { HomeScreen } from './screens/HomeScreen'
@@ -72,12 +73,21 @@ export function App() {
     setView('home')
   }
 
+  // Accept a game invite: join the friend's room by its code.
+  const acceptInvite = (invite: { code: string }) => {
+    setView('home')
+    store.join(invite.code, playerName).catch(() => {
+      /* error surfaced via store.error / toast */
+    })
+  }
+
   return (
     <>
       <TopBar onOpenFriends={() => setView('friends')} onGoHome={goHome} />
       <main className={styles.content}>{renderScreen()}</main>
 
       <Toast message={store.error} onDismiss={store.clearError} />
+      <InviteBanner onAccept={acceptInvite} />
       {/* Guests must pick a name; logged-in users already have a username. */}
       <NameDialog open={!hasName && !session} required />
 
