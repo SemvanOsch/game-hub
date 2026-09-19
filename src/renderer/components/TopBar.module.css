@@ -9,9 +9,21 @@
 }
 
 .brand {
+  -webkit-app-region: no-drag;
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  margin-left: -8px;
+  border-radius: var(--radius);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.brand:hover {
+  background: var(--surface-2);
 }
 
 .logo {
@@ -69,8 +81,8 @@
   -webkit-app-region: no-drag;
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: 5px 12px 5px 6px;
+  gap: 8px;
+  padding: 3px 12px 3px 4px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
@@ -86,13 +98,13 @@
 .avatar {
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: var(--accent);
   color: var(--accent-contrast);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .name {

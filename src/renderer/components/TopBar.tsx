@@ -8,9 +8,11 @@ import styles from './TopBar.module.css'
 interface TopBarProps {
   /** Open the friends hub (only shown when logged in). */
   onOpenFriends?: () => void
+  /** Return to the home screen (from the brand logo). */
+  onGoHome?: () => void
 }
 
-export function TopBar({ onOpenFriends }: TopBarProps) {
+export function TopBar({ onOpenFriends, onGoHome }: TopBarProps) {
   const name = useProfileStore((s) => s.name)
   const session = useAuthStore((s) => s.session)
   const incomingCount = useAuthStore((s) => s.incoming.length)
@@ -23,12 +25,12 @@ export function TopBar({ onOpenFriends }: TopBarProps) {
 
   return (
     <header className={styles.bar}>
-      <div className={styles.brand}>
+      <button className={styles.brand} onClick={onGoHome} title="Go to home screen">
         <span className={styles.logo} aria-hidden>
           ⬢
         </span>
         <span className={styles.title}>Game Hub</span>
-      </div>
+      </button>
 
       <div className={styles.actions}>
         {session ? (

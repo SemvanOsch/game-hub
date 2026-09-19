@@ -105,7 +105,10 @@ export class Room {
     this.players.delete(id)
     this.order = this.order.filter((pid) => pid !== id)
     if (this.hostId === id) this.reassignHost()
-    if (this.game) {
+    // Once a game is finished, preserve its final state so the results screen
+    // keeps the winner, both fleets and the opponent's name intact — a player
+    // leaving the game-over screen must not rewrite what the other sees.
+    if (this.game && this.status !== 'finished') {
       const next = this.engine.removePlayer(this.game, id)
       this.game = next
       if (next) this.status = this.engine.isFinished(next) ? 'finished' : 'in-game'

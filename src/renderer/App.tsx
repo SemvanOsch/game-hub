@@ -66,9 +66,15 @@ export function App() {
     setView('home')
   }
 
+  // Brand click: drop any room and return to the launcher home.
+  const goHome = () => {
+    if (store.room) store.leave()
+    setView('home')
+  }
+
   return (
     <>
-      <TopBar onOpenFriends={() => setView('friends')} />
+      <TopBar onOpenFriends={() => setView('friends')} onGoHome={goHome} />
       <main className={styles.content}>{renderScreen()}</main>
 
       <Toast message={store.error} onDismiss={store.clearError} />

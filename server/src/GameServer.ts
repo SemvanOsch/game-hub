@@ -190,9 +190,23 @@ export class GameServer {
     client.roomCode = null
     client.playerId = null
     if (!room || !playerId) return
+    this.removeFromRoom(room, playerId)
+  }
 
+  /**
+   * Remove a player from a room and broadcast the fallout. A player leaving an
+   * already-finished game does NOT re-broadcast: the remaining players keep the
+   * final game-over intact. A mid-game exit still broadcasts (e.g. so a 1v1
+   * opponent sees their forfeit win).
+   */
+  private removeFromRoom(room: Room, playerId: string): void {
+    const wasFinished = room.status === 'finished'
     room.handleDisconnect(playerId)
-    this.broadcastState(room)
+    if (room.isEmpty) {
+      this.rooms.delete(room.code)
+    } else if (!wasFinished) {
+      this.broadcastState(room)
+    }
   }
 
   private onStartGame(client: ClientState): void {
@@ -453,8 +467,7 @@ export class GameServer {
     this.removePresence(client)
     const room = this.getRoom(client)
     if (room && client.playerId) {
-      room.handleDisconnect(client.playerId)
-      this.broadcastState(room)
+      this.removeFromRoom(room, client.playerId)
     }
     // Let friends see this account go offline (only once its last socket drops).
     if (userId && !this.isOnline(userId)) this.broadcastPresenceChange(userId)
