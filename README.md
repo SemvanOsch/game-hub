@@ -1,4 +1,4 @@
-# Game Launcher
+# Game Hub
 
 A polished desktop **multiplayer game launcher** built with React, TypeScript and Electron.
 It is designed as a small platform that can host many games; the first (and currently only)

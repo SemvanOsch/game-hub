@@ -12,7 +12,7 @@ function createWindow(): void {
     show: false,
     backgroundColor: '#0f1115',
     autoHideMenuBar: true,
-    title: 'Game Launcher',
+    title: 'Game Hub',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       // Security: keep the renderer sandboxed from Node.

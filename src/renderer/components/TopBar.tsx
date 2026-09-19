@@ -13,7 +13,7 @@ export function TopBar() {
         <span className={styles.logo} aria-hidden>
           ⬢
         </span>
-        <span className={styles.title}>Game Launcher</span>
+        <span className={styles.title}>Game Hub</span>
       </div>
       <button
         className={styles.profile}

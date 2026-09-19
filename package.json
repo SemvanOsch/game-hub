@@ -43,8 +43,8 @@
     "vitest": "^2.1.3"
   },
   "build": {
-    "appId": "com.example.gamelauncher",
-    "productName": "Game Launcher",
+    "appId": "com.example.gamehub",
+    "productName": "Game Hub",
     "directories": {
       "output": "release"
     },
