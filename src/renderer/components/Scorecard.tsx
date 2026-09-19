@@ -26,7 +26,11 @@ interface ScorecardProps {
 
 export function Scorecard({ game, players, selfId, canScore, onScore }: ScorecardProps) {
   const nameById = new Map(players.map((p) => [p.id, p.name]))
-  const columns = game.playerOrder
+  // Display the local player's column first (turn order is unchanged — this is
+  // purely presentational so "you" is always the leftmost column on your screen).
+  const columns = game.playerOrder.includes(selfId)
+    ? [selfId, ...game.playerOrder.filter((id) => id !== selfId)]
+    : game.playerOrder
   const currentId = game.playerOrder[game.currentPlayerIndex]
   const totals = Object.fromEntries(
     columns.map((id) => [id, calculateTotals(game.scorecards[id]?.scores ?? {})])
