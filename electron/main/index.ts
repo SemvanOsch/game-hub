@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import { app, BrowserWindow, shell } from 'electron'
+import { setupAutoUpdate } from './updater'
 
 const isDev = !app.isPackaged
 
@@ -7,6 +8,7 @@ const isDev = !app.isPackaged
 app.setName('Game Hub')
 
 const iconPath = join(__dirname, '../../build/icon.png')
+let mainWindow: BrowserWindow | null = null
 
 function createWindow(): void {
   const window = new BrowserWindow({
@@ -27,6 +29,11 @@ function createWindow(): void {
       nodeIntegration: false,
       sandbox: false
     }
+  })
+
+  mainWindow = window
+  window.on('closed', () => {
+    if (mainWindow === window) mainWindow = null
   })
 
   window.once('ready-to-show', () => window.show())
@@ -50,6 +57,7 @@ app.whenReady().then(() => {
   // Ensures Windows groups the app (taskbar/Task Manager) under our identity.
   app.setAppUserModelId('com.example.gamehub')
   createWindow()
+  setupAutoUpdate(() => mainWindow)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
