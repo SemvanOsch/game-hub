@@ -12,7 +12,7 @@ export interface ThemeOption {
 
 export const THEMES: ThemeOption[] = [
   { id: 'purple', label: 'Purple', bg: '#14171d', accent: '#6d7cff' },
-  { id: 'red', label: 'Red', bg: '#14171d', accent: '#ff5d63' },
+  { id: 'red', label: 'Red', bg: '#14171d', accent: '#d5343a' },
   { id: 'green', label: 'Green', bg: '#14171d', accent: '#35c98d' },
   { id: 'blue', label: 'Light Blue', bg: '#14171d', accent: '#38bdf8' },
   { id: 'light', label: 'Light', bg: '#ffffff', accent: '#5666f0' }

@@ -58,11 +58,11 @@
 
 /* Dark · Red */
 :root[data-theme='red'] {
-  --accent: #ff5d63;
-  --accent-hover: #ff7a80;
-  --accent-soft: rgba(255, 93, 99, 0.16);
-  --accent-contrast: #150607;
-  --glow: rgba(255, 93, 99, 0.14);
+  --accent: #d5343a;
+  --accent-hover: #e64b51;
+  --accent-soft: rgba(213, 52, 58, 0.18);
+  --accent-contrast: #ffffff;
+  --glow: rgba(213, 52, 58, 0.13);
 }
 
 /* Dark · Green */
