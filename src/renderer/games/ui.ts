@@ -12,6 +12,8 @@ import { BattleshipsGame } from './battleships/BattleshipsGame'
 import { BattleshipsResult } from './battleships/BattleshipsResult'
 import { BlackjackGame } from './blackjack/BlackjackGame'
 import { BlackjackResult } from './blackjack/BlackjackResult'
+import { RummikubGame } from './rummikub/RummikubGame'
+import { RummikubResult } from './rummikub/RummikubResult'
 
 /** Props passed to a game's in-progress screen. */
 export interface GameUIProps {
@@ -43,7 +45,8 @@ export interface GameUI {
 const GAME_UI: Record<string, GameUI> = {
   yahtzee: { Game: YahtzeeGame, GameOver: YahtzeeResult },
   battleships: { Game: BattleshipsGame, GameOver: BattleshipsResult },
-  blackjack: { Game: BlackjackGame, GameOver: BlackjackResult }
+  blackjack: { Game: BlackjackGame, GameOver: BlackjackResult },
+  rummikub: { Game: RummikubGame, GameOver: RummikubResult }
 }
 
 export function getGameUI(gameId: string): GameUI | undefined {

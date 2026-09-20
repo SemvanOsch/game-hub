@@ -9,11 +9,13 @@ import type { GameEngine } from './types'
 import { yahtzeeEngine } from '../yahtzee/game'
 import { battleshipsEngine } from '../battleships/game'
 import { blackjackEngine } from '../blackjack/game'
+import { rummikubEngine } from '../rummikub/game'
 
 const ENGINES: Record<string, GameEngine> = {
   [yahtzeeEngine.id]: yahtzeeEngine,
   [battleshipsEngine.id]: battleshipsEngine,
-  [blackjackEngine.id]: blackjackEngine
+  [blackjackEngine.id]: blackjackEngine,
+  [rummikubEngine.id]: rummikubEngine
 }
 
 export function getEngine(id: string): GameEngine | undefined {

@@ -1,0 +1,43 @@
+.group {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 10px 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+}
+.editable {
+  cursor: copy;
+}
+
+.tiles {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.label {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+}
+.kind {
+  color: var(--text-faint);
+}
+.badKind {
+  color: var(--danger);
+}
+
+.invalid {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+  box-shadow: 0 0 0 1px var(--danger) inset;
+}
+
+.dragOver {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 2px var(--accent) inset;
+}

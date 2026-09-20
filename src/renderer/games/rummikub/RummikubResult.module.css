@@ -1,0 +1,130 @@
+.screen {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.panel {
+  width: 100%;
+  max-width: 620px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-6) var(--space-5);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.badge {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
+  background: var(--accent-soft);
+  border-radius: var(--radius);
+}
+.outcome {
+  font-size: 28px;
+  margin-top: var(--space-3);
+}
+.victory {
+  color: var(--success);
+}
+.defeat {
+  color: var(--text);
+}
+.summary {
+  margin: var(--space-2) 0 var(--space-5);
+  color: var(--text-dim);
+  font-size: 15px;
+}
+
+.standings {
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: var(--space-5);
+}
+.standingsHead,
+.row {
+  display: grid;
+  grid-template-columns: 28px 1fr 88px 72px;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+.standingsHead {
+  background: var(--surface-2);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+/* The header has no rank column, so its first label sits in the name slot. */
+.standingsHead span:nth-child(1) {
+  grid-column: 2;
+  text-align: left;
+}
+.standingsHead span:nth-child(2) {
+  text-align: right;
+}
+.standingsHead span:nth-child(3) {
+  text-align: right;
+}
+.row {
+  border-top: 1px solid var(--border);
+}
+.winnerRow {
+  background: var(--accent-soft);
+}
+.rank {
+  font-weight: 800;
+  color: var(--text-faint);
+}
+.name {
+  font-weight: 650;
+}
+.tiles {
+  text-align: right;
+  color: var(--text-dim);
+  font-weight: 650;
+}
+.score {
+  text-align: right;
+  font-weight: 800;
+}
+.pos {
+  color: var(--success);
+}
+.neg {
+  color: var(--danger);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.hostNote {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-faint);
+  font-size: 14px;
+}

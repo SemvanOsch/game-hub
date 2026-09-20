@@ -40,7 +40,7 @@ function GameCard({ game, onPlay }: { game: GameDefinition; onPlay: () => void }
   return (
     <article className={styles.card}>
       <div className={styles.icon} aria-hidden>
-        {game.icon}
+        {game.Icon ? <game.Icon /> : game.icon}
       </div>
       <div className={styles.cardBody}>
         <div className={styles.cardTitleRow}>

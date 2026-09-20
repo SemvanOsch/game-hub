@@ -3,12 +3,17 @@
  * is a matter of implementing its screens and appending an entry here — no
  * changes to the launcher shell required.
  */
+import type { ComponentType } from 'react'
+import { RummikubIcon } from './rummikub/RummikubIcon'
+
 export interface GameDefinition {
   id: string
   name: string
   description: string
-  /** Emoji or short glyph used as the card icon. */
+  /** Emoji or short glyph used as the card icon (fallback when no `Icon`). */
   icon: string
+  /** Optional custom graphical icon component, preferred over `icon` when set. */
+  Icon?: ComponentType
   /** Whether the game supports multiplayer over the network. */
   multiplayer: boolean
   /** Min/max players for a multiplayer session. */
@@ -48,6 +53,17 @@ export const GAMES: GameDefinition[] = [
     multiplayer: true,
     minPlayers: 2,
     maxPlayers: 6,
+    available: true
+  },
+  {
+    id: 'rummikub',
+    name: 'Rummikub',
+    description: 'Classic tile-based strategy game for 2–4 players.',
+    icon: '',
+    Icon: RummikubIcon,
+    multiplayer: true,
+    minPlayers: 2,
+    maxPlayers: 4,
     available: true
   }
 ]

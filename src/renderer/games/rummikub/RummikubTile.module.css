@@ -1,0 +1,148 @@
+.tile {
+  --tile-w: 40px;
+  --tile-h: 54px;
+  --tile-ink: #2a2f3a;
+  position: relative;
+  width: var(--tile-w);
+  height: var(--tile-h);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #fdfdf7 0%, #f2efe3 100%);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -3px 5px rgba(0, 0, 0, 0.12),
+    0 3px 5px rgba(0, 0, 0, 0.3);
+  display: grid;
+  place-items: center;
+  user-select: none;
+  color: var(--tile-ink);
+  transition: transform 0.1s ease, box-shadow 0.12s ease, outline-color 0.12s ease;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  flex: 0 0 auto;
+  animation: tile-in 0.18s ease;
+}
+
+.sm {
+  --tile-w: 28px;
+  --tile-h: 38px;
+  border-radius: 6px;
+}
+.md {
+  --tile-w: 40px;
+  --tile-h: 54px;
+}
+.lg {
+  --tile-w: 48px;
+  --tile-h: 64px;
+  border-radius: 10px;
+}
+
+.number {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.sm .number {
+  font-size: 16px;
+}
+.lg .number {
+  font-size: 26px;
+}
+
+/* A small printed dot beneath the number, like a real tile. */
+.dot {
+  position: absolute;
+  bottom: 6px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+.sm .dot {
+  bottom: 4px;
+  width: 3px;
+  height: 3px;
+}
+
+/* Colour-coded ink per tile colour. */
+.tile[data-color='red'] {
+  --tile-ink: #d1343f;
+}
+.tile[data-color='blue'] {
+  --tile-ink: #2565c7;
+}
+.tile[data-color='black'] {
+  --tile-ink: #23262e;
+}
+.tile[data-color='orange'] {
+  --tile-ink: #e07b1a;
+}
+.tile[data-color='joker'] {
+  --tile-ink: #7a3ea8;
+}
+
+.jokerFace {
+  width: 60%;
+  height: 60%;
+  color: var(--tile-ink);
+}
+
+.clickable {
+  cursor: pointer;
+}
+.clickable:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -3px 5px rgba(0, 0, 0, 0.12),
+    0 7px 12px rgba(0, 0, 0, 0.35);
+}
+
+.selected {
+  outline-color: var(--accent);
+  transform: translateY(-6px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 9px 16px rgba(0, 0, 0, 0.4);
+}
+
+.disabled {
+  cursor: default;
+  filter: saturate(0.75) brightness(0.94);
+}
+
+.tile:active {
+  cursor: grabbing;
+}
+
+/* Face-down tile back for opponents' racks. */
+.back {
+  background: linear-gradient(150deg, var(--accent) 0%, var(--accent-hover) 100%);
+  border-color: rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.14),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.25),
+    0 3px 5px rgba(0, 0, 0, 0.3);
+  animation: none;
+}
+
+@keyframes tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile {
+    animation: none;
+    transition: none;
+  }
+}
