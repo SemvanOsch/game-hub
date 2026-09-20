@@ -18,12 +18,24 @@ import {
   type Shot,
   type ShotResult
 } from './types'
+import {
+  ABILITY_INVENTORY_KEY,
+  getAbilityTargets,
+  initialAbilities,
+  rewardForShipLost,
+  type AbilityInventory,
+  type AbilityType
+} from './abilities'
 
 /** A single player's fleet plus the shots the opponent has fired at it. */
 export interface BattleshipsBoard {
   ships: Ship[]
   /** Shots fired AT this board (i.e. by the opponent). */
   shots: Shot[]
+  /** This player's own ability charges (grows as their ships are sunk). */
+  abilities: AbilityInventory
+  /** How many of THIS player's own ships have been completely sunk. */
+  shipsDestroyedCount: number
 }
 
 export interface LastShotEvent {
@@ -35,6 +47,27 @@ export interface LastShotEvent {
   sunkShipType?: ShipType
 }
 
+/** A single cell struck by an ability, with its outcome. */
+export interface AbilityCellOutcome {
+  coordinate: Coordinate
+  result: ShotResult
+}
+
+/** The most recent ability resolution, surfaced to clients for feedback/animation. */
+export interface LastAbilityEvent {
+  /** Player id who used the ability. */
+  by: string
+  ability: AbilityType
+  /** The cell the player selected (centre of the pattern). */
+  target: Coordinate
+  /** Every cell actually fired at (already-shot cells are excluded). */
+  cells: AbilityCellOutcome[]
+  hits: number
+  misses: number
+  /** Ship types newly sunk by this ability, in the order they were sunk. */
+  sunkShipTypes: ShipType[]
+}
+
 /** Authoritative server state. Contains hidden information for both players. */
 export interface BattleshipsGameState {
   status: 'playing' | 'finished'
@@ -42,8 +75,10 @@ export interface BattleshipsGameState {
   currentPlayerIndex: number
   boards: Record<string, BattleshipsBoard>
   winnerId?: string
-  /** The most recent shot, surfaced to clients for shot feedback. */
+  /** The most recent normal shot, surfaced to clients for shot feedback. */
   lastShot?: LastShotEvent
+  /** The most recent ability resolution, surfaced to clients for feedback. */
+  lastAbility?: LastAbilityEvent
 }
 
 export type ActionErrorCode = 'NOT_YOUR_TURN' | 'INVALID_ACTION' | 'GAME_OVER'
@@ -90,9 +125,9 @@ export function isValidShipPlacement(
   return true
 }
 
-/** An empty board with no ships and no shots taken. */
+/** An empty board with no ships, no shots taken, and a starting ability inventory. */
 export function createBoard(): BattleshipsBoard {
-  return { ships: [], shots: [] }
+  return { ships: [], shots: [], abilities: initialAbilities(), shipsDestroyedCount: 0 }
 }
 
 /**
@@ -167,7 +202,12 @@ export function isFleetSunk(ships: Ship[]): boolean {
 export function createGame(playerOrder: string[]): BattleshipsGameState {
   const boards: Record<string, BattleshipsBoard> = {}
   for (const id of playerOrder) {
-    boards[id] = { ships: generateRandomFleet(), shots: [] }
+    boards[id] = {
+      ships: generateRandomFleet(),
+      shots: [],
+      abilities: initialAbilities(),
+      shipsDestroyedCount: 0
+    }
   }
   return {
     status: 'playing',
@@ -184,6 +224,59 @@ export function currentPlayerId(state: BattleshipsGameState): string {
 
 function opponentId(state: BattleshipsGameState, playerId: string): string | undefined {
   return state.playerOrder.find((id) => id !== playerId)
+}
+
+/**
+ * Result of resolving one or more strikes against a single board: the updated
+ * fleet + inventory, the per-cell outcomes, and the ships newly sunk (which have
+ * already been rewarded to the board owner).
+ */
+interface StrikeResolution {
+  board: BattleshipsBoard
+  outcomes: AbilityCellOutcome[]
+  sunkShipTypes: ShipType[]
+}
+
+/**
+ * Apply a set of strikes to `board` immutably. Coordinates must already be
+ * de-duplicated and unshot. Multiple cells on the same ship accumulate, so one
+ * ability can sink a ship in a single resolution. Each ship that transitions
+ * from afloat to sunk awards the BOARD OWNER (the defender) an ability, per
+ * {@link rewardForShipLost} — rewards are for losing your own ships, never for
+ * destroying the enemy's.
+ */
+function resolveStrikes(board: BattleshipsBoard, coordinates: Coordinate[]): StrikeResolution {
+  const ships = board.ships.map((s) => ({ ...s, hits: s.hits.slice() }))
+  const outcomes: AbilityCellOutcome[] = []
+  const sunkShipTypes: ShipType[] = []
+  const abilities: AbilityInventory = { ...board.abilities }
+  let shipsDestroyedCount = board.shipsDestroyedCount
+
+  for (const coordinate of coordinates) {
+    let result: ShotResult = 'miss'
+    for (const ship of ships) {
+      const cellIndex = ship.positions.findIndex((p) => coordinatesEqual(p, coordinate))
+      if (cellIndex === -1) continue
+      result = 'hit'
+      ship.hits[cellIndex] = true
+      if (!ship.sunk && ship.hits.every((h) => h)) {
+        ship.sunk = true
+        sunkShipTypes.push(ship.type)
+        shipsDestroyedCount += 1
+        const reward = rewardForShipLost(shipsDestroyedCount)
+        if (reward) abilities[reward] += 1
+      }
+      break
+    }
+    outcomes.push({ coordinate, result })
+  }
+
+  const shots: Shot[] = [...board.shots, ...outcomes]
+  return {
+    board: { ships, shots, abilities, shipsDestroyedCount },
+    outcomes,
+    sunkShipTypes
+  }
 }
 
 /**
@@ -209,35 +302,27 @@ export function fireShot(
     return fail('INVALID_ACTION', 'You have already fired at that coordinate.')
   }
 
-  // Determine hit/miss and update the struck ship (immutably).
-  const result: ShotResult = targetBoard.ships.some((ship) =>
-    ship.positions.some((p) => coordinatesEqual(p, coordinate))
-  )
-    ? 'hit'
-    : 'miss'
-  let sunkShipType: ShipType | undefined
-  const ships = targetBoard.ships.map((ship) => {
-    const cellIndex = ship.positions.findIndex((p) => coordinatesEqual(p, coordinate))
-    if (cellIndex === -1) return ship
-    const hits = ship.hits.slice()
-    hits[cellIndex] = true
-    const sunk = hits.every((h) => h)
-    if (sunk && !ship.sunk) sunkShipType = ship.type
-    return { ...ship, hits, sunk }
-  })
-
-  const shots: Shot[] = [...targetBoard.shots, { coordinate, result }]
-  const boards: Record<string, BattleshipsBoard> = {
-    ...state.boards,
-    [targetId]: { ships, shots }
+  const { board, outcomes, sunkShipTypes } = resolveStrikes(targetBoard, [coordinate])
+  const result = outcomes[0].result
+  const boards: Record<string, BattleshipsBoard> = { ...state.boards, [targetId]: board }
+  const lastShot: LastShotEvent = {
+    by: playerId,
+    coordinate,
+    result,
+    sunkShipType: sunkShipTypes[0]
   }
 
-  const lastShot: LastShotEvent = { by: playerId, coordinate, result, sunkShipType }
-
-  if (isFleetSunk(ships)) {
+  if (isFleetSunk(board.ships)) {
     return {
       ok: true,
-      state: { ...state, boards, status: 'finished', winnerId: playerId, lastShot }
+      state: {
+        ...state,
+        boards,
+        status: 'finished',
+        winnerId: playerId,
+        lastShot,
+        lastAbility: undefined
+      }
     }
   }
 
@@ -248,7 +333,96 @@ export function fireShot(
       : (state.currentPlayerIndex + 1) % state.playerOrder.length
   return {
     ok: true,
-    state: { ...state, boards, currentPlayerIndex: nextIndex, lastShot }
+    state: { ...state, boards, currentPlayerIndex: nextIndex, lastShot, lastAbility: undefined }
+  }
+}
+
+/**
+ * Use a special ability for `playerId`, striking the opponent's board from the
+ * selected `target`. Unlike a normal shot, an ability ALWAYS consumes one turn
+ * regardless of how many cells it hits.
+ *
+ * Fully server-authoritative: verifies turn, ownership of a charge, and a valid
+ * unshot target; computes the affected cells (including the Scatter Missile's
+ * random ones); applies hits, sinks, and rewards; consumes one charge; and
+ * detects game-over. `rng` is injectable for deterministic tests.
+ */
+export function useAbility(
+  state: BattleshipsGameState,
+  playerId: string,
+  ability: AbilityType,
+  target: Coordinate,
+  rng: () => number = Math.random
+): ActionResult {
+  if (state.status !== 'playing') return fail('GAME_OVER', 'The game has already finished.')
+  if (currentPlayerId(state) !== playerId) return fail('NOT_YOUR_TURN', 'It is not your turn.')
+  if (!isInsideBoard(target)) return fail('INVALID_ACTION', 'That coordinate is off the board.')
+
+  const attackerBoard = state.boards[playerId]
+  const inventoryKey = ABILITY_INVENTORY_KEY[ability]
+  if (!attackerBoard || attackerBoard.abilities[inventoryKey] <= 0) {
+    return fail('INVALID_ACTION', 'You have no charges of that ability.')
+  }
+
+  const targetId = opponentId(state, playerId)
+  if (!targetId) return fail('INVALID_ACTION', 'No opponent to fire at.')
+
+  const targetBoard = state.boards[targetId]
+  const alreadyShot = new Set(targetBoard.shots.map((s) => coordinateKey(s.coordinate)))
+  if (alreadyShot.has(coordinateKey(target))) {
+    return fail('INVALID_ACTION', 'You have already fired at that coordinate.')
+  }
+
+  // The server computes the affected cells (Scatter Missile's are random here).
+  const shotCoords = targetBoard.shots.map((s) => s.coordinate)
+  const affected = getAbilityTargets(ability, target, shotCoords, rng)
+  // Ignore already-shot cells; the validated centre is guaranteed unshot.
+  const fresh = affected.filter((c) => !alreadyShot.has(coordinateKey(c)))
+
+  const { board, outcomes, sunkShipTypes } = resolveStrikes(targetBoard, fresh)
+
+  // Consume exactly one charge from the attacker's own inventory.
+  const attacker: BattleshipsBoard = {
+    ...attackerBoard,
+    abilities: { ...attackerBoard.abilities, [inventoryKey]: attackerBoard.abilities[inventoryKey] - 1 }
+  }
+
+  const boards: Record<string, BattleshipsBoard> = {
+    ...state.boards,
+    [targetId]: board,
+    [playerId]: attacker
+  }
+
+  const hits = outcomes.filter((o) => o.result === 'hit').length
+  const lastAbility: LastAbilityEvent = {
+    by: playerId,
+    ability,
+    target,
+    cells: outcomes,
+    hits,
+    misses: outcomes.length - hits,
+    sunkShipTypes
+  }
+
+  if (isFleetSunk(board.ships)) {
+    return {
+      ok: true,
+      state: {
+        ...state,
+        boards,
+        status: 'finished',
+        winnerId: playerId,
+        lastAbility,
+        lastShot: undefined
+      }
+    }
+  }
+
+  // An ability always ends the turn.
+  const nextIndex = (state.currentPlayerIndex + 1) % state.playerOrder.length
+  return {
+    ok: true,
+    state: { ...state, boards, currentPlayerIndex: nextIndex, lastAbility, lastShot: undefined }
   }
 }
 

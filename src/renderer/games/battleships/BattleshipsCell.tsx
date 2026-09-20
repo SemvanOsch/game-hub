@@ -12,8 +12,14 @@ interface BattleshipsCellProps {
   interactive?: boolean
   /** Enemy board only: this cell is the currently hovered/targeted shot. */
   targeted?: boolean
+  /** Enemy board only: this cell lies within the armed ability's preview area. */
+  preview?: boolean
   /** Play a one-shot animation because this cell was just fired at. */
   animate?: 'hit' | 'miss' | null
+  /** Play the ability blast animation on this cell (styled per ability). */
+  blast?: 'bombs' | 'scatter_missile' | 'nuke' | null
+  /** Milliseconds to delay the blast, so it ripples out from the centre. */
+  blastDelay?: number
   onClick?: () => void
   onHover?: (coordinate: Coordinate | null) => void
 }
@@ -43,7 +49,10 @@ export function BattleshipsCell({
   ship,
   interactive = false,
   targeted = false,
+  preview = false,
   animate = null,
+  blast = null,
+  blastDelay = 0,
   onClick,
   onHover
 }: BattleshipsCellProps) {
@@ -53,20 +62,26 @@ export function BattleshipsCell({
     styles[state],
     interactive ? styles.interactive : '',
     targeted ? styles.targeted : '',
+    preview ? styles.preview : '',
     ship ? styles.shipCell : '',
     ship?.top ? styles.edgeTop : '',
     ship?.right ? styles.edgeRight : '',
     ship?.bottom ? styles.edgeBottom : '',
     ship?.left ? styles.edgeLeft : '',
     animate === 'hit' ? styles.animHit : '',
-    animate === 'miss' ? styles.animMiss : ''
+    animate === 'miss' ? styles.animMiss : '',
+    blast ? styles.blast : ''
   ]
     .filter(Boolean)
     .join(' ')
 
-  const style = ship
-    ? ({ '--ship-color': SHIP_COLORS[ship.colorIndex] } as CSSProperties)
-    : undefined
+  const style: CSSProperties | undefined =
+    ship || blast
+      ? ({
+          ...(ship ? { '--ship-color': SHIP_COLORS[ship.colorIndex] } : {}),
+          ...(blast ? { '--blast-delay': `${blastDelay}ms` } : {})
+        } as CSSProperties)
+      : undefined
 
   const content = SYMBOL[state]
 

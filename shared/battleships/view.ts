@@ -6,8 +6,9 @@
  * ships. {@link getPlayerView} is the single choke point that strips hidden
  * information — the renderer only ever sees a {@link BattleshipsView}.
  */
-import type { BattleshipsGameState, LastShotEvent } from './engine'
+import type { BattleshipsGameState, LastAbilityEvent, LastShotEvent } from './engine'
 import { isFleetSunk } from './engine'
+import { initialAbilities, type AbilityInventory } from './abilities'
 import { SHIP_DEFINITIONS, type Ship, type ShipType, type Shot } from './types'
 
 /** The local player's own board — full knowledge of their own fleet. */
@@ -46,8 +47,13 @@ export interface BattleshipsView {
   enemy: EnemyBoardView
   ownFleet: FleetStatusEntry[]
   enemyFleet: FleetStatusEntry[]
+  /** The local player's OWN ability charges. The opponent's are never revealed. */
+  abilities: AbilityInventory
+  /** How many of the local player's own ships have been sunk. */
+  shipsDestroyedCount: number
   winnerId?: string
   lastShot?: LastShotEvent
+  lastAbility?: LastAbilityEvent
 }
 
 export interface BattleshipsResults {
@@ -101,8 +107,12 @@ export function getPlayerView(
     },
     ownFleet: fleetStatus(ownBoard?.ships ?? []),
     enemyFleet: fleetStatus(enemyShips),
+    // Only the local player's own inventory is exposed — never the opponent's.
+    abilities: ownBoard?.abilities ?? initialAbilities(),
+    shipsDestroyedCount: ownBoard?.shipsDestroyedCount ?? 0,
     winnerId: state.winnerId,
-    lastShot: state.lastShot
+    lastShot: state.lastShot,
+    lastAbility: state.lastAbility
   }
 }
 

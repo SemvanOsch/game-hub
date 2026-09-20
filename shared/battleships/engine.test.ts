@@ -9,6 +9,7 @@ import {
   removePlayerFromGame,
   type BattleshipsGameState
 } from './engine'
+import { initialAbilities } from './abilities'
 import {
   BOARD_SIZE,
   SHIP_DEFINITIONS,
@@ -44,8 +45,8 @@ function makeState(shipsA: Ship[], shipsB: Ship[], currentPlayerIndex = 0): Batt
     playerOrder: ['a', 'b'],
     currentPlayerIndex,
     boards: {
-      a: { ships: shipsA, shots: [] },
-      b: { ships: shipsB, shots: [] }
+      a: { ships: shipsA, shots: [], abilities: initialAbilities(), shipsDestroyedCount: 0 },
+      b: { ships: shipsB, shots: [], abilities: initialAbilities(), shipsDestroyedCount: 0 }
     }
   }
 }

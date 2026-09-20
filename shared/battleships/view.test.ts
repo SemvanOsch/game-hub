@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { fireShot, type BattleshipsGameState } from './engine'
 import { getPlayerView } from './view'
+import { initialAbilities } from './abilities'
 import { coordinateKey, type Coordinate, type Orientation, type Ship, type ShipType } from './types'
 
 function makeShip(
@@ -26,9 +27,19 @@ function baseState(): BattleshipsGameState {
     currentPlayerIndex: 0,
     boards: {
       // a: destroyer at A1-B1 (row 0, cols 0-1)
-      a: { ships: [makeShip('destroyer', 2, { row: 0, col: 0 }, 'horizontal')], shots: [] },
+      a: {
+        ships: [makeShip('destroyer', 2, { row: 0, col: 0 }, 'horizontal')],
+        shots: [],
+        abilities: initialAbilities(),
+        shipsDestroyedCount: 0
+      },
       // b: destroyer at J9-J10 (row 8-9, col 9)
-      b: { ships: [makeShip('destroyer', 2, { row: 8, col: 9 }, 'vertical')], shots: [] }
+      b: {
+        ships: [makeShip('destroyer', 2, { row: 8, col: 9 }, 'vertical')],
+        shots: [],
+        abilities: initialAbilities(),
+        shipsDestroyedCount: 0
+      }
     }
   }
 }

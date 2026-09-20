@@ -86,6 +86,22 @@
   outline-offset: -2px;
 }
 
+/* ---------------------------------------------------------------------------
+ * Ability target preview — a subtle dashed overlay marking every cell an armed
+ * ability would strike. Deliberately distinct from hover, targeted, and the
+ * fired/hit/miss/ship states. Client-side presentation only.
+ * ------------------------------------------------------------------------- */
+.preview::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 2px;
+  border: 1.5px dashed color-mix(in srgb, var(--accent) 80%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+
 /* The targeted shot: clearly marked before firing. */
 .targeted {
   background: var(--accent-soft);
@@ -172,11 +188,64 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+ * Ability blast — a brief, bright flash swept across every affected cell as an
+ * ability resolves. The pattern of cells (a +, a diamond, or scattered points)
+ * is the per-ability motif; the flash makes the strike land satisfyingly.
+ * ------------------------------------------------------------------------- */
+.blast {
+  z-index: 4;
+  animation: bs-blast-pop 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--blast-delay, 0ms);
+}
+.blast::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 3px;
+  pointer-events: none;
+  animation: bs-blast-flash 0.72s cubic-bezier(0.33, 0, 0.2, 1) both;
+  animation-delay: var(--blast-delay, 0ms);
+}
+@keyframes bs-blast-pop {
+  0% {
+    transform: scale(0.82);
+  }
+  35% {
+    transform: scale(1.16);
+  }
+  70% {
+    transform: scale(0.97);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes bs-blast-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 196, 87, 0);
+    background: rgba(255, 210, 120, 0);
+    opacity: 0;
+  }
+  22% {
+    box-shadow: 0 0 12px 5px rgba(255, 200, 96, 0.7);
+    background: rgba(255, 214, 130, 0.5);
+    opacity: 1;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 196, 87, 0);
+    background: transparent;
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animHit,
   .animMiss,
   .animHit::before,
-  .animMiss::before {
+  .animMiss::before,
+  .blast,
+  .blast::after {
     animation: none;
   }
 }
