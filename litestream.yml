@@ -15,8 +15,8 @@ dbs:
         path: gamehub.db
         # Cloudflare R2 (or any S3-compatible endpoint). For R2 this looks like
         # https://<account-id>.r2.cloudflarestorage.com
+        # Litestream 0.5.x auto-detects R2 from this endpoint and applies the
+        # right settings (path-style + concurrency=2 for R2's upload limits).
         endpoint: ${R2_ENDPOINT}
-        region: auto
         access-key-id: ${R2_ACCESS_KEY_ID}
         secret-access-key: ${R2_SECRET_ACCESS_KEY}
-        force-path-style: true
