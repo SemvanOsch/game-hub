@@ -43,4 +43,4 @@ EXPOSE 3001
 # exists (no-op on the very first deploy), then run the server UNDER
 # Litestream so every write is replicated and a final sync happens on
 # SIGTERM (redeploy/shutdown).
-CMD ["sh", "-c", "litestream restore -if-replica-exists /data/gamehub.db && exec litestream replicate -exec 'npm run start:server'"]
+CMD ["sh", "-c", "litestream restore -if-replica-exists /data/gamehub.db || echo '[entrypoint] no replica to restore yet (fresh start)'; exec litestream replicate -exec 'npm run start:server'"]
