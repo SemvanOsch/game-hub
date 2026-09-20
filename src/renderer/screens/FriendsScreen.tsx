@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FriendSummary } from '@shared/types'
+import { headToHeadScore } from '@shared/friends'
 import { useAuthStore } from '../store/authStore'
 import { GAMES } from '../games/registry'
 import { Button } from '../components/Button'
@@ -145,6 +146,8 @@ function FriendRow({
   onRemove: (userId: string) => void
   onSelect: () => void
 }) {
+  const score = headToHeadScore(friend.records)
+  const played = score.mine + score.theirs > 0
   return (
     <li className={styles.row}>
       <button className={styles.friendButton} onClick={onSelect} title="View records">
@@ -156,6 +159,20 @@ function FriendRow({
           />
         </span>
         <span className={styles.name}>{friend.username}</span>
+        {played ? (
+          <span
+            className={styles.scoreBadge}
+            title={`Head-to-head: you ${score.mine}, ${friend.username} ${score.theirs}`}
+          >
+            <span className={score.mine >= score.theirs ? styles.wins : undefined}>
+              {score.mine}
+            </span>
+            <span className={styles.recordSep}>–</span>
+            <span className={score.theirs > score.mine ? styles.losses : undefined}>
+              {score.theirs}
+            </span>
+          </span>
+        ) : null}
         <span className={styles.viewHint} aria-hidden>
           ›
         </span>
@@ -178,14 +195,26 @@ function FriendRecordsModal({
   if (!friend) return null
   const recordFor = (gameId: string) => friend.records.find((r) => r.gameId === gameId)
   const anyPlayed = friend.records.some((r) => r.wins + r.losses > 0)
+  const score = headToHeadScore(friend.records)
 
   return (
     <Modal open title={`Records vs ${friend.username}`} onClose={onClose}>
-      <p className={styles.modalIntro}>Your head-to-head record against {friend.username}.</p>
       {!anyPlayed ? (
         <p className={styles.empty}>No games played together yet.</p>
       ) : (
         <div className={styles.recordList}>
+          <div className={styles.totalRow}>
+            <span className={styles.totalLabel}>Overall</span>
+            <span className={styles.totalScore}>
+              <span className={score.mine >= score.theirs ? styles.wins : undefined}>
+                You {score.mine}
+              </span>
+              <span className={styles.recordSep}>·</span>
+              <span className={score.theirs > score.mine ? styles.losses : undefined}>
+                {friend.username} {score.theirs}
+              </span>
+            </span>
+          </div>
           {GAMES.filter((g) => g.multiplayer).map((game) => {
             const rec = recordFor(game.id)
             const wins = rec?.wins ?? 0

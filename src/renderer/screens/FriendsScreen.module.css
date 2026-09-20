@@ -156,6 +156,21 @@
   transform: translateX(2px);
 }
 
+/* Compact head-to-head point tally shown in a friend row. */
+.scoreBadge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-3);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
 .viewHint {
   margin-left: auto;
   color: var(--text-faint);
@@ -191,6 +206,33 @@
   background: var(--bg-2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+}
+/* Overall head-to-head total, emphasised above the per-game rows. */
+.totalRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px 12px;
+  margin-bottom: var(--space-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.totalLabel {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+}
+.totalScore {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 .recordIcon {
   display: grid;
