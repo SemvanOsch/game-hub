@@ -63,7 +63,7 @@
 .standingsHead,
 .row {
   display: grid;
-  grid-template-columns: 28px 1fr 88px 72px;
+  grid-template-columns: 28px 1fr 88px;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
@@ -82,9 +82,6 @@
   text-align: left;
 }
 .standingsHead span:nth-child(2) {
-  text-align: right;
-}
-.standingsHead span:nth-child(3) {
   text-align: right;
 }
 .row {

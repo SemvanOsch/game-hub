@@ -12,6 +12,9 @@ export interface RummikubGroupProps {
   /** True when this group is not a legal run/set right now (highlight red). */
   invalid: boolean
   selectedIds: Set<string>
+  /** Tile ids added last turn (green) and moved last turn (orange). */
+  addedIds: ReadonlySet<string>
+  movedIds: ReadonlySet<string>
   onTileClick: (id: string) => void
   onTileDragStart: (id: string, e: DragEvent<HTMLDivElement>) => void
   /** Drop the currently dragged tiles into this group. */
@@ -31,6 +34,8 @@ export function RummikubGroup({
   editable,
   invalid,
   selectedIds,
+  addedIds,
+  movedIds,
   onTileClick,
   onTileDragStart,
   onDropTiles,
@@ -78,6 +83,7 @@ export function RummikubGroup({
             tile={tile}
             size="md"
             selected={selectedIds.has(tile.id)}
+            mark={addedIds.has(tile.id) ? 'added' : movedIds.has(tile.id) ? 'moved' : undefined}
             draggable={editable}
             onClick={
               editable

@@ -9,6 +9,8 @@ export interface RummikubTileProps {
   draggable?: boolean
   /** Renders a face-down tile back (used for opponents' hidden racks). */
   faceDown?: boolean
+  /** A last-turn change flag: green dot for newly added, orange for moved. */
+  mark?: 'added' | 'moved'
   size?: 'sm' | 'md' | 'lg'
   onClick?: (e: MouseEvent<HTMLDivElement>) => void
   onDragStart?: (e: DragEvent<HTMLDivElement>) => void
@@ -28,6 +30,7 @@ export function RummikubTile({
   disabled = false,
   draggable = false,
   faceDown = false,
+  mark,
   size = 'md',
   onClick,
   onDragStart,
@@ -68,6 +71,13 @@ export function RummikubTile({
         <span className={styles.number}>{tile.value}</span>
       )}
       <span className={styles.dot} aria-hidden />
+      {mark ? (
+        <span
+          className={[styles.mark, mark === 'added' ? styles.markAdded : styles.markMoved].join(' ')}
+          title={mark === 'added' ? 'Added last turn' : 'Moved last turn'}
+          aria-hidden
+        />
+      ) : null}
     </div>
   )
 }

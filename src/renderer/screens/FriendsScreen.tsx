@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import type { FriendSummary } from '@shared/types'
 import { useAuthStore } from '../store/authStore'
-import { getGame } from '../games/registry'
+import { GAMES } from '../games/registry'
 import { Button } from '../components/Button'
 import { TextField } from '../components/TextField'
 import { Toast } from '../components/Toast'
+import { Modal } from '../components/Modal'
 import styles from './FriendsScreen.module.css'
 
 interface FriendsScreenProps {
@@ -23,6 +24,13 @@ export function FriendsScreen({ onBack }: FriendsScreenProps) {
   const clearFriendError = useAuthStore((s) => s.clearFriendError)
 
   const [username, setUsername] = useState('')
+  /** The friend whose records modal is open, if any. */
+  const [selected, setSelected] = useState<FriendSummary | null>(null)
+
+  // Keep the open modal in sync with live record/presence updates.
+  const selectedFriend = selected
+    ? (friends.find((f) => f.userId === selected.userId) ?? selected)
+    : null
 
   const add = () => {
     const name = username.trim()
@@ -91,7 +99,12 @@ export function FriendsScreen({ onBack }: FriendsScreenProps) {
           ) : (
             <ul className={styles.list}>
               {friends.map((friend) => (
-                <FriendRow key={friend.userId} friend={friend} onRemove={removeFriend} />
+                <FriendRow
+                  key={friend.userId}
+                  friend={friend}
+                  onRemove={removeFriend}
+                  onSelect={() => setSelected(friend)}
+                />
               ))}
             </ul>
           )}
@@ -116,6 +129,8 @@ export function FriendsScreen({ onBack }: FriendsScreenProps) {
         ) : null}
       </div>
 
+      <FriendRecordsModal friend={selectedFriend} onClose={() => setSelected(null)} />
+
       <Toast message={friendError} onDismiss={clearFriendError} />
     </div>
   )
@@ -123,24 +138,28 @@ export function FriendsScreen({ onBack }: FriendsScreenProps) {
 
 function FriendRow({
   friend,
-  onRemove
+  onRemove,
+  onSelect
 }: {
   friend: FriendSummary
   onRemove: (userId: string) => void
+  onSelect: () => void
 }) {
   return (
     <li className={styles.row}>
-      <span className={styles.avatar}>
-        {initial(friend.username)}
-        <span
-          className={friend.online ? styles.dotOnline : styles.dotOffline}
-          title={friend.online ? 'Online' : 'Offline'}
-        />
-      </span>
-      <div className={styles.friendMeta}>
+      <button className={styles.friendButton} onClick={onSelect} title="View records">
+        <span className={styles.avatar}>
+          {initial(friend.username)}
+          <span
+            className={friend.online ? styles.dotOnline : styles.dotOffline}
+            title={friend.online ? 'Online' : 'Offline'}
+          />
+        </span>
         <span className={styles.name}>{friend.username}</span>
-        <span className={styles.records}>{recordText(friend)}</span>
-      </div>
+        <span className={styles.viewHint} aria-hidden>
+          ›
+        </span>
+      </button>
       <Button size="sm" variant="ghost" onClick={() => onRemove(friend.userId)}>
         Remove
       </Button>
@@ -148,15 +167,54 @@ function FriendRow({
   )
 }
 
-function initial(name: string): string {
-  return name.charAt(0).toUpperCase() || '?'
+/** Popup listing the local user's head-to-head record against a friend per game. */
+function FriendRecordsModal({
+  friend,
+  onClose
+}: {
+  friend: FriendSummary | null
+  onClose: () => void
+}) {
+  if (!friend) return null
+  const recordFor = (gameId: string) => friend.records.find((r) => r.gameId === gameId)
+  const anyPlayed = friend.records.some((r) => r.wins + r.losses > 0)
+
+  return (
+    <Modal open title={`Records vs ${friend.username}`} onClose={onClose}>
+      <p className={styles.modalIntro}>Your head-to-head record against {friend.username}.</p>
+      {!anyPlayed ? (
+        <p className={styles.empty}>No games played together yet.</p>
+      ) : (
+        <div className={styles.recordList}>
+          {GAMES.filter((g) => g.multiplayer).map((game) => {
+            const rec = recordFor(game.id)
+            const wins = rec?.wins ?? 0
+            const losses = rec?.losses ?? 0
+            const total = wins + losses
+            return (
+              <div key={game.id} className={styles.recordRow}>
+                <span className={styles.recordIcon} aria-hidden>
+                  {game.Icon ? <game.Icon /> : game.icon}
+                </span>
+                <span className={styles.recordGame}>{game.name}</span>
+                {total === 0 ? (
+                  <span className={styles.recordNone}>Not played</span>
+                ) : (
+                  <span className={styles.recordScore}>
+                    <span className={styles.wins}>{wins}W</span>
+                    <span className={styles.recordSep}>·</span>
+                    <span className={styles.losses}>{losses}L</span>
+                  </span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </Modal>
+  )
 }
 
-/** "Yahtzee 3–2 · Battleships 1–0", or a hint when they've never played. */
-function recordText(friend: FriendSummary): string {
-  const played = friend.records.filter((r) => r.wins + r.losses > 0)
-  if (played.length === 0) return 'No games played yet'
-  return played
-    .map((r) => `${getGame(r.gameId)?.name ?? r.gameId} ${r.wins}–${r.losses}`)
-    .join(' · ')
+function initial(name: string): string {
+  return name.charAt(0).toUpperCase() || '?'
 }

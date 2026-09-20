@@ -60,6 +60,18 @@ export interface RummikubGameState {
   turnCount: number
   /** Id used to mint fresh table-group ids deterministically. */
   groupIdSeq: number
+  /**
+   * The current player's in-progress, UNCOMMITTED table arrangement, broadcast
+   * so opponents can watch them rearrange tiles live. It is not authoritative
+   * and is never rule-validated — it is cleared when the turn ends (commit,
+   * draw, or disconnect). Only tiles the current player may legally touch
+   * (their own rack + the committed table) may appear in it.
+   */
+  draft?: { playerId: string; table: RummikubGroup[] }
+  /** Tile ids newly played onto the table on the most recent committed turn. */
+  lastAdded?: string[]
+  /** Tile ids already on the table that changed groups on the most recent turn. */
+  lastMoved?: string[]
 }
 
 export type ActionResult = EngineActionResult<RummikubGameState>
@@ -126,6 +138,7 @@ function advanceTurn(state: RummikubGameState): void {
   const nextIdx = (idx + 1) % state.playerOrder.length
   state.currentPlayerId = state.playerOrder[nextIdx]
   state.turnCount++
+  delete state.draft // the previous player's in-progress arrangement is gone
 }
 
 /** Sum of the penalty values of a player's remaining rack tiles. */
@@ -142,6 +155,7 @@ function rackPenalty(state: RummikubGameState, playerId: string): number {
 function finish(state: RummikubGameState, winnerId: string): void {
   state.status = 'finished'
   state.winnerId = winnerId
+  delete state.draft
   const scores: Record<string, number> = {}
   let pot = 0
   for (const id of state.playerOrder) {
@@ -285,6 +299,37 @@ export function finishTurn(
   nextPlayer.rack = [...proposedRack]
   if (!nextPlayer.hasOpened) nextPlayer.hasOpened = true
 
+  // Track what changed this turn so the UI can flag it: a tile is "added" if it
+  // came from the rack, "moved" if it was already on the table and its set of
+  // pre-existing group-mates changed (it was split off or merged in). Simply
+  // extending a group with new tiles does NOT mark the untouched tiles.
+  const membersOf = (table: readonly RummikubGroup[]): Map<string, Set<string>> => {
+    const m = new Map<string, Set<string>>()
+    for (const g of table) {
+      const members = new Set(g.tileIds)
+      for (const id of g.tileIds) m.set(id, members)
+    }
+    return m
+  }
+  const preexisting = new Set(state.table.flatMap((g) => g.tileIds))
+  const oldMembers = membersOf(state.table)
+  const newMembers = membersOf(next.table)
+  const added: string[] = []
+  const moved: string[] = []
+  for (const [id, group] of newMembers) {
+    if (!preexisting.has(id)) {
+      added.push(id)
+      continue
+    }
+    const oldMates = [...(oldMembers.get(id) ?? [])].filter((x) => x !== id)
+    const newMates = new Set([...group].filter((x) => x !== id && preexisting.has(x)))
+    if (oldMates.length !== newMates.size || oldMates.some((x) => !newMates.has(x))) {
+      moved.push(id)
+    }
+  }
+  next.lastAdded = added
+  next.lastMoved = moved
+
   if (nextPlayer.rack.length === 0) {
     finish(next, playerId)
   } else {
@@ -306,6 +351,9 @@ export function drawTile(state: RummikubGameState, playerId: string): ActionResu
     const id = next.pool.pop() as string
     next.players[playerId].rack.push(id)
   }
+  // A draw changes nothing on the table, so clear last-turn change markers.
+  next.lastAdded = []
+  next.lastMoved = []
   advanceTurn(next)
   return { ok: true, state: next }
 }
@@ -325,6 +373,7 @@ export function removePlayerFromGame(
 
   const leaving = next.players[playerId]
   if (leaving) next.pool = shuffle([...next.pool, ...leaving.rack])
+  if (next.draft && next.draft.playerId === playerId) delete next.draft
 
   const wasCurrent = next.currentPlayerId === playerId
   const idx = next.playerOrder.indexOf(playerId)
@@ -345,4 +394,47 @@ export function removePlayerFromGame(
     next.turnCount++
   }
   return next
+}
+
+/**
+ * Record the current player's in-progress table arrangement so opponents can
+ * watch it live. This is NOT a committed move: it is not rule-validated (the
+ * arrangement may be mid-edit and invalid) and does not advance the turn. It
+ * only enforces that every referenced tile is one the current player may
+ * legally touch — their own rack tiles and tiles already on the committed table
+ * — so it can never leak an opponent's hidden rack or invent tiles.
+ */
+export function setPreview(
+  state: RummikubGameState,
+  playerId: string,
+  table: RummikubGroup[]
+): ActionResult {
+  const guard = requireTurn(state, playerId)
+  if (guard) return guard
+
+  const byId = tileIndex(state)
+  const allowed = new Set<string>([...state.players[playerId].rack, ...tableTileIds(state.table)])
+  const seen = new Set<string>()
+  for (const group of table) {
+    for (const id of group.tileIds) {
+      if (!byId.has(id) || !allowed.has(id) || seen.has(id)) {
+        return fail('INVALID_ACTION', 'Illegal preview arrangement.')
+      }
+      seen.add(id)
+    }
+  }
+
+  const next = clone(state)
+  next.draft = { playerId, table: table.map((g) => ({ id: g.id, tileIds: [...g.tileIds] })) }
+  return { ok: true, state: next }
+}
+
+/** Clear the current player's in-progress arrangement (e.g. on Cancel). */
+export function clearPreview(state: RummikubGameState, playerId: string): ActionResult {
+  const guard = requireTurn(state, playerId)
+  if (guard) return guard
+  if (!state.draft) return { ok: true, state }
+  const next = clone(state)
+  delete next.draft
+  return { ok: true, state: next }
 }

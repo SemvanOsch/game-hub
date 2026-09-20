@@ -5,10 +5,12 @@
  */
 import type { EngineActionResult, GameEngine } from '../games/types'
 import {
+  clearPreview,
   createGame,
   drawTile,
   finishTurn,
   removePlayerFromGame,
+  setPreview,
   type RummikubGameState
 } from './engine'
 import { getPlayerView, getResults, type RummikubResults, type RummikubView } from './view'
@@ -24,8 +26,17 @@ export interface FinishTurnAction {
 export interface DrawAction {
   type: 'draw'
 }
+/** Broadcast the current player's in-progress arrangement (not a committed move). */
+export interface PreviewAction {
+  type: 'preview'
+  table: RummikubGroup[]
+}
+/** Clear the current player's in-progress arrangement. */
+export interface ClearPreviewAction {
+  type: 'clear_preview'
+}
 
-export type RummikubAction = FinishTurnAction | DrawAction
+export type RummikubAction = FinishTurnAction | DrawAction | PreviewAction | ClearPreviewAction
 
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((v) => typeof v === 'string')
@@ -61,6 +72,12 @@ export const rummikubEngine: GameEngine<
     if (!raw || typeof raw !== 'object') return null
     const action = raw as Record<string, unknown>
     if (action.type === 'draw') return { type: 'draw' }
+    if (action.type === 'clear_preview') return { type: 'clear_preview' }
+    if (action.type === 'preview') {
+      const table = parseTable(action.table)
+      if (!table) return null
+      return { type: 'preview', table }
+    }
     if (action.type === 'finish_turn') {
       const table = parseTable(action.table)
       if (!table) return null
@@ -80,6 +97,10 @@ export const rummikubEngine: GameEngine<
         return drawTile(state, playerId)
       case 'finish_turn':
         return finishTurn(state, playerId, action.table, action.rack)
+      case 'preview':
+        return setPreview(state, playerId, action.table)
+      case 'clear_preview':
+        return clearPreview(state, playerId)
       default:
         return { ok: false, code: 'INVALID_ACTION', message: 'Unknown action.' }
     }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import type { RummikubGroup } from '@shared/rummikub/types'
 import type { RummikubView } from '@shared/rummikub/view'
 import { Button } from '../../components/Button'
@@ -24,15 +24,20 @@ interface Snapshot {
   rackOrder: string[]
 }
 
-/** Group-signature comparison so we can tell whether the table has been edited. */
-function sameTable(a: readonly RummikubGroup[], b: readonly RummikubGroup[]): boolean {
-  const sig = (t: readonly RummikubGroup[]) =>
-    t
-      .map((g) => [...g.tileIds].sort().join(','))
-      .sort()
-      .join('|')
-  return sig(a) === sig(b)
+/** Content signature of a table, independent of group order/ids. */
+function tableSig(t: readonly RummikubGroup[]): string {
+  return t
+    .map((g) => [...g.tileIds].sort().join(','))
+    .sort()
+    .join('|')
 }
+
+/** Whether two tables hold the same tiles in the same groups. */
+function sameTable(a: readonly RummikubGroup[], b: readonly RummikubGroup[]): boolean {
+  return tableSig(a) === tableSig(b)
+}
+
+const PREVIEW_CLEARED = 'CLEAR'
 
 export function RummikubGame({ room, view, sendAction, onLeave }: GameUIProps) {
   const state = view as RummikubView
@@ -48,10 +53,14 @@ export function RummikubGame({ room, view, sendAction, onLeave }: GameUIProps) {
   const [rackOrder, setRackOrder] = useState<string[]>(() => state.rack.map((t) => t.id))
   const [table, setTable] = useState<RummikubGroup[]>(() => cloneTable(state.table))
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  /** Where a dragged tile would drop in the rack: a tile id, '__end__', or null. */
+  const [rackDropTarget, setRackDropTarget] = useState<string | null>(null)
   const dragRef = useRef<string[]>([])
   const rackOrderRef = useRef(rackOrder)
   rackOrderRef.current = rackOrder
   const snapshotRef = useRef<Snapshot>({ table: cloneTable(state.table), rackOrder })
+  /** Signature of the last preview we broadcast, so we don't spam identical ones. */
+  const lastSentRef = useRef<string>(PREVIEW_CLEARED)
 
   // On every authoritative update (our commit, an opponent's move, a draw), sync
   // the table and reconcile the rack membership — while preserving the player's
@@ -63,12 +72,41 @@ export function RummikubGame({ room, view, sendAction, onLeave }: GameUIProps) {
     rackOrderRef.current = reconciled
     setTable(cloneTable(state.table))
     setSelected(new Set())
+    setRackDropTarget(null)
     snapshotRef.current = { table: cloneTable(state.table), rackOrder: reconciled }
+    lastSentRef.current = PREVIEW_CLEARED
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.turnCount, state.status])
 
+  // Spectators: mirror the authoritative table live, so an opponent's
+  // in-progress rearranging (their broadcast draft) shows up in real time.
+  useEffect(() => {
+    if (!yourTurn) setTable(cloneTable(state.table))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, yourTurn])
+
+  // Current player: broadcast the in-progress arrangement (debounced) so
+  // opponents can watch. Sends a clear once the board matches the committed
+  // state again (e.g. after Cancel). Never loops: our own echoes don't change
+  // the local `table`.
+  useEffect(() => {
+    if (!yourTurn) return
+    const handle = setTimeout(() => {
+      const isCommitted = sameTable(table, state.table)
+      const toSend = isCommitted ? PREVIEW_CLEARED : tableSig(table)
+      if (toSend === lastSentRef.current) return
+      lastSentRef.current = toSend
+      if (isCommitted) sendAction({ type: 'clear_preview' })
+      else sendAction({ type: 'preview', table: table.map((g) => ({ id: g.id, tileIds: [...g.tileIds] })) })
+    }, 120)
+    return () => clearTimeout(handle)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [table, yourTurn])
+
   const originalRack = useMemo(() => new Set(state.rack.map((t) => t.id)), [state.rack])
   const evaluation = useMemo(() => evaluateTurn(state, table), [state, table])
+  const addedIds = useMemo(() => new Set(state.lastAdded), [state.lastAdded])
+  const movedIds = useMemo(() => new Set(state.lastMoved), [state.lastMoved])
 
   const onTable = useMemo(() => tableIdSet(table), [table])
   const rackTiles = useMemo(
@@ -86,6 +124,7 @@ export function RummikubGame({ room, view, sendAction, onLeave }: GameUIProps) {
   const clearSelection = () => setSelected(new Set())
   const endDrag = () => {
     dragRef.current = []
+    setRackDropTarget(null)
   }
 
   const toggleSelect = (id: string) => {
@@ -185,6 +224,10 @@ export function RummikubGame({ room, view, sendAction, onLeave }: GameUIProps) {
         <div className={styles.turnBanner} role="status" aria-live="polite">
           {yourTurn ? (
             <span className={styles.yourTurn}>Your turn</span>
+          ) : state.previewBy ? (
+            <span className={styles.rearranging}>
+              {nameOf(state.previewBy)} is rearranging the table…
+            </span>
           ) : (
             <span className={styles.waiting}>Waiting for {nameOf(state.currentPlayerId)}…</span>
           )}
@@ -227,7 +270,7 @@ export function RummikubGame({ room, view, sendAction, onLeave }: GameUIProps) {
 
       {/* Table */}
       <div
-        className={styles.table}
+        className={[styles.table, yourTurn ? styles.tableYourTurn : ''].filter(Boolean).join(' ')}
         onDragOver={allowTableDrop}
         onDrop={(e) => {
           if (e.target === e.currentTarget) onDropNewGroup(e)
@@ -248,6 +291,8 @@ export function RummikubGame({ room, view, sendAction, onLeave }: GameUIProps) {
                 editable={yourTurn}
                 invalid={evaluation.invalidGroupIds.includes(group.id)}
                 selectedIds={selected}
+                addedIds={addedIds}
+                movedIds={movedIds}
                 onTileClick={toggleSelect}
                 onTileDragStart={onTileDragStart}
                 onDropTiles={onDropGroup}
@@ -270,7 +315,22 @@ export function RummikubGame({ room, view, sendAction, onLeave }: GameUIProps) {
 
       {/* Pool + rack */}
       <div className={styles.bottom}>
-        <div className={styles.pool} aria-label={`Draw pool: ${state.poolCount} tiles`}>
+        <button
+          type="button"
+          className={styles.pool}
+          onClick={draw}
+          disabled={!yourTurn || dirty || state.poolCount === 0}
+          title={
+            !yourTurn
+              ? 'Wait for your turn'
+              : dirty
+                ? 'Cancel your current play to draw instead'
+                : state.poolCount === 0
+                  ? 'The draw pool is empty'
+                  : 'Draw a tile and end your turn'
+          }
+          aria-label={`Draw pool: ${state.poolCount} tiles${yourTurn && !dirty ? ' — click to draw' : ''}`}
+        >
           <div className={styles.poolStack} aria-hidden>
             <RummikubTile tile={{ id: 'pool', isJoker: false }} faceDown size="sm" />
             <RummikubTile tile={{ id: 'pool2', isJoker: false }} faceDown size="sm" />
@@ -278,9 +338,11 @@ export function RummikubGame({ room, view, sendAction, onLeave }: GameUIProps) {
           </div>
           <div className={styles.poolLabel}>
             <span className={styles.poolCount}>{state.poolCount}</span>
-            <span className={styles.poolText}>in pool</span>
+            <span className={styles.poolText}>
+              {yourTurn && !dirty && state.poolCount > 0 ? 'draw a tile' : 'in pool'}
+            </span>
           </div>
-        </div>
+        </button>
 
         <div className={styles.rackArea}>
           <div className={styles.rackHead}>
@@ -302,7 +364,14 @@ export function RummikubGame({ room, view, sendAction, onLeave }: GameUIProps) {
           </div>
           <div
             className={styles.rack}
-            onDragOver={allowRackDrop}
+            onDragOver={(e) => {
+              allowRackDrop(e)
+              if (e.target === e.currentTarget) setRackDropTarget('__end__')
+            }}
+            onDragLeave={(e) => {
+              // Only clear when the pointer actually leaves the rack area.
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) setRackDropTarget(null)
+            }}
             onDrop={(e) => {
               if (e.target === e.currentTarget) dropOnRack(null)
             }}
@@ -311,27 +380,36 @@ export function RummikubGame({ room, view, sendAction, onLeave }: GameUIProps) {
               <span className={styles.rackEmpty}>No tiles — you’ve laid everything down!</span>
             ) : (
               rackTiles.map((tile) => (
-                <div
-                  key={tile.id}
-                  className={styles.rackSlot}
-                  onDragOver={allowRackDrop}
-                  onDrop={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    dropOnRack(tile.id)
-                  }}
-                >
-                  <RummikubTile
-                    tile={tile}
-                    size="md"
-                    selected={selected.has(tile.id)}
-                    draggable
-                    onClick={yourTurn ? () => toggleSelect(tile.id) : undefined}
-                    onDragStart={(e) => onTileDragStart(tile.id, e)}
-                  />
-                </div>
+                <Fragment key={tile.id}>
+                  {rackDropTarget === tile.id ? <div className={styles.dropMarker} aria-hidden /> : null}
+                  <div
+                    className={styles.rackSlot}
+                    onDragOver={(e) => {
+                      allowRackDrop(e)
+                      setRackDropTarget(tile.id)
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      dropOnRack(tile.id)
+                    }}
+                  >
+                    <RummikubTile
+                      tile={tile}
+                      size="md"
+                      selected={selected.has(tile.id)}
+                      draggable
+                      onClick={yourTurn ? () => toggleSelect(tile.id) : undefined}
+                      onDragStart={(e) => onTileDragStart(tile.id, e)}
+                      onDragEnd={endDrag}
+                    />
+                  </div>
+                </Fragment>
               ))
             )}
+            {rackDropTarget === '__end__' && rackTiles.length > 0 ? (
+              <div className={styles.dropMarker} aria-hidden />
+            ) : null}
           </div>
         </div>
       </div>
@@ -379,7 +457,11 @@ export function RummikubGame({ room, view, sendAction, onLeave }: GameUIProps) {
               </Button>
             </>
           ) : (
-            <span className={styles.waitBig}>{nameOf(state.currentPlayerId)} is playing…</span>
+            <span className={styles.waitBig}>
+              {state.previewBy
+                ? `${nameOf(state.previewBy)} is rearranging the table…`
+                : `${nameOf(state.currentPlayerId)} is playing…`}
+            </span>
           )}
         </div>
       </div>

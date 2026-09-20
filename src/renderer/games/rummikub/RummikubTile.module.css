@@ -90,6 +90,30 @@
   color: var(--tile-ink);
 }
 
+/* Last-turn change flag: a small dot in the top-right corner. */
+.mark {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+}
+.sm .mark {
+  width: 6px;
+  height: 6px;
+  top: 2px;
+  right: 2px;
+}
+.markAdded {
+  background: #35c98d;
+}
+.markMoved {
+  background: #f0932b;
+}
+
 .clickable {
   cursor: pointer;
 }

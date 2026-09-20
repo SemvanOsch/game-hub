@@ -36,6 +36,16 @@ export interface RummikubView {
   poolCount: number
   /** Monotonic turn counter — the client resets local edits when it changes. */
   turnCount: number
+  /**
+   * Set (for spectators only) to the id of the player who is currently
+   * rearranging the table. When present, {@link table} is that player's live,
+   * uncommitted arrangement — watch it change in real time.
+   */
+  previewBy?: string
+  /** Tile ids newly played onto the table on the most recent turn (flag green). */
+  lastAdded: string[]
+  /** Tile ids already on the table that moved groups last turn (flag orange). */
+  lastMoved: string[]
   /** Whether the local player has already laid their initial meld. */
   selfHasOpened: boolean
   /** Minimum value for a first meld (30), surfaced for the UI. */
@@ -53,9 +63,18 @@ export function getPlayerView(state: RummikubGameState, playerId: string): Rummi
   const self = state.players[playerId]
 
   // Only tiles the player may see: the public table plus the player's own rack.
+  // Spectators see the current player's live, uncommitted arrangement; the
+  // player doing the rearranging (and everyone once no draft exists) sees the
+  // authoritative committed table.
+  const showDraft = !!state.draft && state.draft.playerId !== playerId
+  const activeTable = showDraft ? state.draft!.table : state.table
+
   const tiles: Record<string, RummikubTile> = {}
-  for (const group of state.table) {
-    for (const id of group.tileIds) tiles[id] = state.tilesById[id]
+  for (const group of activeTable) {
+    for (const id of group.tileIds) {
+      const tile = state.tilesById[id]
+      if (tile) tiles[id] = tile
+    }
   }
   const rack: RummikubTile[] = []
   if (self) {
@@ -82,12 +101,15 @@ export function getPlayerView(state: RummikubGameState, playerId: string): Rummi
     selfId: playerId,
     currentPlayerId: state.currentPlayerId,
     yourTurn: state.status === 'playing' && state.currentPlayerId === playerId,
-    table: state.table.map((g) => ({ id: g.id, tileIds: [...g.tileIds] })),
+    table: activeTable.map((g) => ({ id: g.id, tileIds: [...g.tileIds] })),
     tiles,
     rack,
     players,
     poolCount: state.pool.length,
     turnCount: state.turnCount,
+    previewBy: showDraft ? state.draft!.playerId : undefined,
+    lastAdded: state.lastAdded ?? [],
+    lastMoved: state.lastMoved ?? [],
     selfHasOpened: self?.hasOpened ?? false,
     initialMeldRequirement: INITIAL_MELD_MINIMUM,
     winnerId: state.winnerId,

@@ -45,6 +45,33 @@
   color: var(--text-dim);
   font-size: 15px;
 }
+.rearranging {
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.rearranging::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: rk-pulse 1s ease-in-out infinite;
+}
+@keyframes rk-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
 .meldNote {
   font-size: 12px;
   color: var(--warning);
@@ -113,9 +140,15 @@
   overflow: auto;
   background: radial-gradient(circle at 50% 0%, rgba(109, 124, 255, 0.06), transparent 60%),
     var(--bg-2);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+/* When it's your turn, the table is outlined in your (accent) colour. */
+.tableYourTurn {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft), 0 0 18px var(--glow);
 }
 .emptyTable {
   color: var(--text-faint);
@@ -163,6 +196,22 @@
   border-radius: var(--radius);
   padding: 8px 12px;
   flex: 0 0 auto;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.1s ease;
+}
+.pool:not(:disabled):hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+  transform: translateY(-2px);
+}
+.pool:not(:disabled):hover .poolText {
+  color: var(--accent);
+}
+.pool:disabled {
+  cursor: default;
+  opacity: 0.7;
 }
 .poolStack {
   position: relative;
@@ -238,6 +287,27 @@
 }
 .rackSlot {
   display: flex;
+}
+/* Insertion indicator showing where a dragged tile will land in the rack. */
+.dropMarker {
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 3px;
+  min-height: 48px;
+  margin: 0 1px;
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: rk-marker 0.6s ease-in-out infinite;
+}
+@keyframes rk-marker {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 .rackEmpty {
   color: rgba(255, 255, 255, 0.7);

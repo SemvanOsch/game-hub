@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import {
+  clearPreview,
   createGame,
   drawTile,
   finishTurn,
   removePlayerFromGame,
+  setPreview,
   type RummikubGameState,
   type RummikubServerPlayer
 } from './engine'
+import { getPlayerView } from './view'
 import type { RummikubColor, RummikubGroup, RummikubTile } from './types'
 
 let seq = 0
@@ -395,6 +398,156 @@ describe('multiplayer security', () => {
     // r11 vanishes entirely.
     const res = finishTurn(state, 'a', groups([r9, r10]), [])
     expect(res.ok).toBe(false)
+  })
+})
+
+describe('last-turn change tracking', () => {
+  it('flags tiles played from the rack as added, with nothing moved', () => {
+    const r9 = t('red', 9)
+    const r10 = t('red', 10)
+    const r11 = t('red', 11)
+    const state = makeState({ racks: { a: [r9, r10, r11], b: [] }, current: 'a', opened: ['a'] })
+    const res = finishTurn(state, 'a', groups([r9, r10, r11]), [])
+    expect(res.ok).toBe(true)
+    if (res.ok) {
+      expect(new Set(res.state.lastAdded)).toEqual(new Set([r9.id, r10.id, r11.id]))
+      expect(res.state.lastMoved).toEqual([])
+    }
+  })
+
+  it('marks only the new tile when extending a run (untouched tiles are not moved)', () => {
+    const tr3 = t('red', 3)
+    const tr4 = t('red', 4)
+    const tr5 = t('red', 5)
+    const r6 = t('red', 6)
+    const state = makeState({
+      racks: { a: [r6], b: [] },
+      table: [[tr3, tr4, tr5]],
+      current: 'a',
+      opened: ['a']
+    })
+    const res = finishTurn(state, 'a', groups([tr3, tr4, tr5, r6]), [])
+    expect(res.ok).toBe(true)
+    if (res.ok) {
+      expect(res.state.lastAdded).toEqual([r6.id])
+      expect(res.state.lastMoved).toEqual([])
+    }
+  })
+
+  it('marks split-off table tiles as moved', () => {
+    const tr3 = t('red', 3)
+    const tr4 = t('red', 4)
+    const tr5 = t('red', 5)
+    const tr6 = t('red', 6)
+    const b6 = t('blue', 6)
+    const k6 = t('black', 6)
+    const state = makeState({
+      racks: { a: [b6, k6], b: [] },
+      table: [[tr3, tr4, tr5, tr6]],
+      current: 'a',
+      opened: ['a']
+    })
+    // Split red 3-4-5-6 into red 3-4-5 and a set of 6s (red6 + blue6 + black6).
+    const res = finishTurn(state, 'a', groups([tr3, tr4, tr5], [tr6, b6, k6]), [])
+    expect(res.ok).toBe(true)
+    if (res.ok) {
+      expect(new Set(res.state.lastAdded)).toEqual(new Set([b6.id, k6.id]))
+      // tr6 lost its run-mates, tr3/4/5 lost tr6 → all four moved.
+      expect(new Set(res.state.lastMoved)).toEqual(new Set([tr3.id, tr4.id, tr5.id, tr6.id]))
+    }
+  })
+
+  it('clears change markers on a draw', () => {
+    const state = makeState({
+      racks: { a: [t('red', 1)], b: [] },
+      pool: [t('orange', 5)],
+      current: 'a'
+    })
+    state.lastAdded = ['stale']
+    state.lastMoved = ['stale']
+    const res = drawTile(state, 'a')
+    expect(res.ok).toBe(true)
+    if (res.ok) {
+      expect(res.state.lastAdded).toEqual([])
+      expect(res.state.lastMoved).toEqual([])
+    }
+  })
+})
+
+describe('preview (live spectating)', () => {
+  it('stores the current player’s draft without advancing the turn', () => {
+    const r9 = t('red', 9)
+    const r10 = t('red', 10)
+    const r11 = t('red', 11)
+    const state = makeState({ racks: { a: [r9, r10, r11], b: [] }, current: 'a', opened: ['a'] })
+    const res = setPreview(state, 'a', groups([r9, r10, r11]))
+    expect(res.ok).toBe(true)
+    if (res.ok) {
+      expect(res.state.draft?.playerId).toBe('a')
+      expect(res.state.currentPlayerId).toBe('a')
+      expect(res.state.turnCount).toBe(state.turnCount)
+    }
+  })
+
+  it('rejects a preview from a player whose turn it is not', () => {
+    const state = makeState({ racks: { a: [t('red', 9)], b: [t('blue', 5)] }, current: 'a' })
+    const res = setPreview(state, 'b', [])
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.code).toBe('NOT_YOUR_TURN')
+  })
+
+  it('rejects a preview that references tiles the player cannot touch', () => {
+    const r9 = t('red', 9)
+    const opp = t('blue', 5)
+    const state = makeState({ racks: { a: [r9], b: [opp] }, current: 'a' })
+    // a tries to preview using b's tile.
+    const res = setPreview(state, 'a', groups([r9, opp]))
+    expect(res.ok).toBe(false)
+  })
+
+  it('shows the draft to spectators but not to the drafter, and hides it after commit', () => {
+    const r9 = t('red', 9)
+    const r10 = t('red', 10)
+    const r11 = t('red', 11)
+    const spare = t('blue', 2)
+    const state = makeState({ racks: { a: [r9, r10, r11, spare], b: [] }, current: 'a', opened: ['a'] })
+    const previewed = setPreview(state, 'a', groups([r9, r10, r11]))
+    expect(previewed.ok).toBe(true)
+    if (!previewed.ok) return
+
+    // Spectator b sees the in-progress arrangement and who is doing it.
+    const bView = getPlayerView(previewed.state, 'b')
+    expect(bView.previewBy).toBe('a')
+    expect(bView.table.flatMap((g) => g.tileIds)).toContain(r9.id)
+    expect(bView.tiles[r9.id]).toBeDefined()
+
+    // The drafter still sees the committed (empty) table.
+    const aView = getPlayerView(previewed.state, 'a')
+    expect(aView.previewBy).toBeUndefined()
+    expect(aView.table).toEqual([])
+  })
+
+  it('clears the draft when the turn is committed', () => {
+    const r9 = t('red', 9)
+    const r10 = t('red', 10)
+    const r11 = t('red', 11)
+    const state = makeState({ racks: { a: [r9, r10, r11], b: [] }, current: 'a', opened: ['a'] })
+    const previewed = setPreview(state, 'a', groups([r9, r10, r11]))
+    expect(previewed.ok).toBe(true)
+    if (!previewed.ok) return
+    const committed = finishTurn(previewed.state, 'a', groups([r9, r10, r11]), [])
+    expect(committed.ok).toBe(true)
+    if (committed.ok) expect(committed.state.draft).toBeUndefined()
+  })
+
+  it('clearPreview removes an in-progress draft', () => {
+    const r9 = t('red', 9)
+    const state = makeState({ racks: { a: [r9], b: [] }, current: 'a', opened: ['a'] })
+    const previewed = setPreview(state, 'a', groups([r9]))
+    if (!previewed.ok) throw new Error('preview failed')
+    const cleared = clearPreview(previewed.state, 'a')
+    expect(cleared.ok).toBe(true)
+    if (cleared.ok) expect(cleared.state.draft).toBeUndefined()
   })
 })
 
