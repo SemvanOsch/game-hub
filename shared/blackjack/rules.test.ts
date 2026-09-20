@@ -3,11 +3,14 @@ import type { Card, Rank } from './cards'
 import {
   BASE_BET_UNITS,
   CHIP_UNIT,
+  MAX_HANDS_PER_PLAYER,
   calculateBlackjackPayout,
   calculateNormalWinPayout,
   calculatePushPayout,
+  cardsFormSplittablePair,
   computeBet,
   formatChips,
+  getSplitValue,
   payoutForOutcome,
   resolveOutcome,
   shouldDealerHit,
@@ -17,6 +20,10 @@ import {
 function hand(...ranks: Rank[]): Card[] {
   const suits = ['hearts', 'spades', 'clubs', 'diamonds'] as const
   return ranks.map((rank, i) => ({ rank, suit: suits[i % suits.length] }))
+}
+
+function card(rank: Rank): Card {
+  return { rank, suit: 'spades' }
 }
 
 const chips = (n: number) => n * CHIP_UNIT
@@ -137,5 +144,40 @@ describe('formatChips', () => {
 describe('constants', () => {
   it('base bet is 100 chips', () => {
     expect(unitsToChips(BASE_BET_UNITS)).toBe(100)
+  })
+
+  it('caps a player at four hands', () => {
+    expect(MAX_HANDS_PER_PLAYER).toBe(4)
+  })
+})
+
+describe('getSplitValue', () => {
+  it('treats every ten-value card as 10', () => {
+    for (const rank of ['10', 'J', 'Q', 'K'] as const) {
+      expect(getSplitValue(card(rank))).toBe(10)
+    }
+  })
+
+  it('treats an Ace as 11 and pip cards as their number', () => {
+    expect(getSplitValue(card('A'))).toBe(11)
+    expect(getSplitValue(card('8'))).toBe(8)
+  })
+})
+
+describe('cardsFormSplittablePair', () => {
+  it('accepts equal Blackjack values, including mixed ten-value ranks', () => {
+    expect(cardsFormSplittablePair(hand('8', '8'))).toBe(true)
+    expect(cardsFormSplittablePair(hand('A', 'A'))).toBe(true)
+    expect(cardsFormSplittablePair(hand('K', 'Q'))).toBe(true)
+    expect(cardsFormSplittablePair(hand('J', '10'))).toBe(true)
+    expect(cardsFormSplittablePair(hand('Q', 'K'))).toBe(true)
+  })
+
+  it('rejects unequal values and non-pairs', () => {
+    expect(cardsFormSplittablePair(hand('8', '9'))).toBe(false)
+    expect(cardsFormSplittablePair(hand('A', 'K'))).toBe(false)
+    expect(cardsFormSplittablePair(hand('7', '10'))).toBe(false)
+    expect(cardsFormSplittablePair(hand('8'))).toBe(false) // not two cards
+    expect(cardsFormSplittablePair(hand('8', '8', '8'))).toBe(false)
   })
 })

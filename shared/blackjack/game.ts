@@ -6,9 +6,11 @@ import type { EngineActionResult, GameEngine } from '../games/types'
 import {
   createGame,
   doubleDown,
+  finishMatch,
   hit,
   nextHand,
   removePlayerFromGame,
+  split,
   stand,
   type BlackjackGameState
 } from './engine'
@@ -23,13 +25,25 @@ export interface StandAction {
 export interface DoubleAction {
   type: 'double'
 }
+export interface SplitAction {
+  type: 'split'
+}
 export interface NextHandAction {
   type: 'next_hand'
 }
+export interface FinishAction {
+  type: 'finish'
+}
 
-export type BlackjackAction = HitAction | StandAction | DoubleAction | NextHandAction
+export type BlackjackAction =
+  | HitAction
+  | StandAction
+  | DoubleAction
+  | SplitAction
+  | NextHandAction
+  | FinishAction
 
-const ACTION_TYPES = new Set(['hit', 'stand', 'double', 'next_hand'])
+const ACTION_TYPES = new Set(['hit', 'stand', 'double', 'split', 'next_hand', 'finish'])
 
 export const blackjackEngine: GameEngine<
   BlackjackGameState,
@@ -62,8 +76,12 @@ export const blackjackEngine: GameEngine<
         return stand(state, playerId)
       case 'double':
         return doubleDown(state, playerId)
+      case 'split':
+        return split(state, playerId)
       case 'next_hand':
         return nextHand(state, playerId)
+      case 'finish':
+        return finishMatch(state, playerId)
       default:
         return { ok: false, code: 'INVALID_ACTION', message: 'Unknown action.' }
     }

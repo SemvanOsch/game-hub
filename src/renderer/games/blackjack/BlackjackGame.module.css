@@ -224,6 +224,73 @@
   font-size: 28px;
   font-weight: 800;
 }
+
+/* Row of the local player's hands (more than one after splitting). */
+.handsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+.handBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+}
+.handBox.activeHand {
+  border-color: var(--accent);
+  background: var(--surface-2);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 18px var(--glow);
+}
+.handBoxHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.handBet {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text-dim);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+}
+.handBox.activeHand .handBet {
+  background: var(--surface-3);
+}
+
+/* Another player's hand(s) in their seat. */
+.seatHands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.seatHand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+}
+.seatHandActive {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+.seatHandTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.seatBet {
+  font-size: 11px;
+  color: var(--text-dim);
+}
 .spectating {
   color: var(--text-faint);
   font-size: 13px;

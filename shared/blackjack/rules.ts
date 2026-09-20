@@ -7,7 +7,7 @@
  * (75 chips → 112.5 profit) — with no floating-point rounding. Values are only
  * divided down to displayable chips ({@link unitsToChips}) at the view boundary.
  */
-import { calculateHandValue, isBlackjack, isBust, type Card } from './cards'
+import { calculateHandValue, cardValue, isBlackjack, isBust, type Card } from './cards'
 
 /** Half-chip units per whole chip. */
 export const CHIP_UNIT = 2
@@ -22,6 +22,23 @@ export const WIN_TARGET_CHIPS = 1000
 export const WIN_TARGET_UNITS = WIN_TARGET_CHIPS * CHIP_UNIT
 /** Reshuffle the shoe before a new hand once fewer than this many cards remain. */
 export const RESHUFFLE_THRESHOLD = 15
+/** The most hands a single player may hold at once (the original plus 3 splits). */
+export const MAX_HANDS_PER_PLAYER = 4
+
+/**
+ * A card's Blackjack value for the purpose of matching a splittable pair: all
+ * ten-value cards (10/J/Q/K) share the value 10, and an Ace is 11. Two cards may
+ * be split when this value is equal — e.g. K+Q and J+10 match, A+K does not.
+ * (This is value equivalence, NOT exact-rank equality.)
+ */
+export function getSplitValue(card: Card): number {
+  return cardValue(card.rank)
+}
+
+/** Whether a two-card hand is a splittable pair by Blackjack value equivalence. */
+export function cardsFormSplittablePair(cards: readonly Card[]): boolean {
+  return cards.length === 2 && getSplitValue(cards[0]) === getSplitValue(cards[1])
+}
 
 /** Convert internal half-chip units to a (possibly fractional) chip amount. */
 export function unitsToChips(units: number): number {

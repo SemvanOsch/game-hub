@@ -2,22 +2,44 @@ import { describe, expect, it } from 'vitest'
 import type { Card, Rank } from './cards'
 import { isHidden } from './cards'
 import { CHIP_UNIT } from './rules'
-import { stand, type BlackjackGameState, type BlackjackServerPlayer } from './engine'
+import {
+  split,
+  stand,
+  type BlackjackGameState,
+  type BlackjackHand,
+  type BlackjackServerPlayer
+} from './engine'
 import { getPlayerView } from './view'
 
 const chips = (n: number) => n * CHIP_UNIT
 const card = (rank: Rank, suit: Card['suit'] = 'spades'): Card => ({ rank, suit })
 
-function player(id: string, over: Partial<BlackjackServerPlayer> = {}): BlackjackServerPlayer {
+let handSeq = 0
+function hand(cards: Card[], over: Partial<BlackjackHand> = {}): BlackjackHand {
+  return {
+    id: `t${handSeq++}`,
+    cards,
+    bet: chips(100),
+    status: 'playing',
+    doubled: false,
+    fromSplit: false,
+    splitAce: false,
+    ...over
+  }
+}
+
+function player(
+  id: string,
+  over: Partial<BlackjackServerPlayer> & { cards?: Card[] } = {}
+): BlackjackServerPlayer {
+  const { cards, ...rest } = over
   return {
     playerId: id,
     chips: chips(400),
-    bet: chips(100),
-    cards: [card('9'), card('7')],
+    hands: over.hands ?? [hand(cards ?? [card('9'), card('7')])],
+    activeHandIndex: 0,
     status: 'waiting',
-    hasActed: false,
-    doubled: false,
-    ...over
+    ...rest
   }
 }
 
@@ -36,6 +58,7 @@ function baseState(): BlackjackGameState {
     dealerRevealed: false,
     currentPlayerId: 'a',
     handNumber: 1,
+    handIdSeq: 1000,
     // Undrawn deck the client must never see.
     deck: [card('2', 'hearts'), card('3', 'hearts'), card('4', 'hearts')]
   }
@@ -92,15 +115,60 @@ describe('getPlayerView – information security', () => {
     expect(view.players).toHaveLength(2)
     const self = view.players.find((p) => p.isSelf)
     expect(self?.playerId).toBe('a')
-    expect(self?.total).toBe(20)
+    expect(self?.hands[0].total).toBe(20)
     const other = view.players.find((p) => !p.isSelf)
-    expect(other?.cards).toHaveLength(2) // player hands are public
+    expect(other?.hands[0].cards).toHaveLength(2) // player hands are public
   })
 
   it('reports chip and bet amounts in whole chips', () => {
     const view = getPlayerView(baseState(), 'a')
     const self = view.players.find((p) => p.isSelf)!
     expect(self.chips).toBe(400)
-    expect(self.bet).toBe(100)
+    expect(self.hands[0].bet).toBe(100)
+  })
+
+  it('marks the local player’s active hand and exposes split hands publicly', () => {
+    // a holds a pair of 8s; split into two hands and check the view.
+    let s = baseState()
+    s.players.a = player('a', {
+      status: 'playing',
+      cards: [card('8', 'spades'), card('8', 'hearts')]
+    })
+    s.deck = [card('K', 'clubs'), card('3', 'diamonds')]
+    const r = split(s, 'a')
+    if (!r.ok) throw new Error('split failed')
+    s = r.state
+
+    const selfView = getPlayerView(s, 'a')
+    const self = selfView.players.find((p) => p.isSelf)!
+    expect(self.hands).toHaveLength(2)
+    expect(self.hands[0].isActive).toBe(true)
+    expect(self.hands[1].isActive).toBe(false)
+    expect(selfView.canHit).toBe(true)
+
+    // The opponent also sees a's two hands (player hands are public).
+    const oppView = getPlayerView(s, 'b')
+    const aFromB = oppView.players.find((p) => p.playerId === 'a')!
+    expect(aFromB.hands).toHaveLength(2)
+  })
+
+  it('never leaks hidden info even after a split', () => {
+    let s = baseState()
+    s.players.a = player('a', {
+      status: 'playing',
+      cards: [card('8', 'spades'), card('8', 'clubs')]
+    })
+    // Split will draw these; the remaining deck cards must never appear.
+    s.deck = [card('4', 'hearts'), card('3', 'hearts')]
+    const r = split(s, 'a')
+    if (!r.ok) throw new Error('split failed')
+    s = r.state
+
+    const view = getPlayerView(s, 'a')
+    const json = JSON.stringify(view)
+    // Hole card (King of diamonds) still hidden.
+    expect(json).not.toContain('diamonds')
+    expect(view.dealer.revealed).toBe(false)
+    expect(view as object).not.toHaveProperty('deck')
   })
 })
