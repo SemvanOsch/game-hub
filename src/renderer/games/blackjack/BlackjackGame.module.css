@@ -58,12 +58,12 @@
     linear-gradient(160deg, #1f6f4a, #14503a);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
-  padding: var(--space-5) var(--space-5) var(--space-6);
+  padding: var(--space-4) var(--space-5);
   box-shadow: var(--shadow), inset 0 0 60px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 .dealerHead {
   display: flex;
@@ -91,7 +91,7 @@
 
 .banner {
   text-align: center;
-  margin: var(--space-4) 0;
+  margin: var(--space-3) 0;
   font-size: 15px;
   font-weight: 650;
   color: var(--text);
@@ -100,7 +100,7 @@
 
 .others {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
@@ -113,7 +113,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  min-height: 132px;
 }
 .seat.current {
   border-color: var(--accent);
@@ -165,23 +164,23 @@
   border-radius: var(--radius-lg);
   padding: var(--space-4) var(--space-5);
   display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas:
-    'info controls'
-    'hand controls';
-  gap: var(--space-3) var(--space-5);
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: 'info hand controls';
+  gap: var(--space-5);
   align-items: center;
 }
 .self.current {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent), 0 0 24px var(--glow);
 }
+/* Left column: name + status over the player's main chip pile (beside the
+ * cards, not stacked above them, so the whole panel stays short). */
 .selfInfo {
   grid-area: info;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--space-2);
 }
 .selfName {
   display: flex;
@@ -189,34 +188,19 @@
   gap: var(--space-2);
   font-weight: 700;
   font-size: 15px;
+  white-space: nowrap;
 }
-.chips {
+/* The player's main (uncommitted) chip pile. */
+.bank {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-}
-.chipVal {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--accent-hover);
-}
-.chipLabel {
-  font-size: 12px;
-  color: var(--text-faint);
-}
-.bet {
-  margin-left: var(--space-2);
-  font-size: 12px;
-  font-weight: 650;
-  color: var(--text-dim);
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-2);
+  justify-content: center;
 }
 .selfHand {
   grid-area: hand;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: var(--space-4);
   min-height: 92px;
 }
@@ -234,12 +218,19 @@
 }
 .handBox {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   padding: var(--space-2) var(--space-3);
   border: 1px solid transparent;
   border-radius: var(--radius);
+}
+/* The badge / total / bet stack sitting beside a hand's cards. */
+.handSide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
 }
 .handBox.activeHand {
   border-color: var(--accent);
@@ -251,18 +242,38 @@
   align-items: center;
   gap: var(--space-2);
 }
-.handBet {
-  font-size: 12px;
-  font-weight: 650;
-  color: var(--text-dim);
+.doubledTag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--warning);
   padding: 2px 8px;
   border-radius: var(--radius-pill);
-  background: var(--surface-2);
-}
-.handBox.activeHand .handBet {
-  background: var(--surface-3);
+  background: rgba(244, 192, 99, 0.16);
 }
 
+/* Betting area beside a hand's cards — the committed chips sit "on the felt",
+ * visually separate from the player's main stack, and centred in their slot. */
+.betArea {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-2) var(--space-3) var(--space-1);
+  border-radius: var(--radius);
+  background: radial-gradient(120% 120% at 50% 0%, rgba(0, 0, 0, 0.22), transparent 70%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* An opponent's row: their uncommitted stack beside their hand(s). */
+.seatBody {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+}
+.seatBank {
+  display: flex;
+  justify-content: center;
+}
 /* Another player's hand(s) in their seat. */
 .seatHands {
   display: flex;
@@ -271,8 +282,9 @@
 }
 .seatHand {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
   padding: 4px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -281,15 +293,22 @@
   border-color: var(--accent);
   background: var(--surface-2);
 }
-.seatHandTop {
+/* Cards with their status + total tucked directly beneath (kept tight); the bet
+ * and the chip stack sit to either side of this block. */
+.seatHandCards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.seatHandMeta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-2);
 }
 .seatBet {
-  font-size: 11px;
-  color: var(--text-dim);
+  display: flex;
+  justify-content: center;
 }
 .spectating {
   color: var(--text-faint);
@@ -298,12 +317,18 @@
 }
 .controls {
   grid-area: controls;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-2);
-  min-width: 150px;
+  align-content: center;
+  min-width: 220px;
+}
+/* Buttons that stand alone (Next hand / See final results) span the full width. */
+.fullSpan {
+  grid-column: 1 / -1;
 }
 .waitNote {
+  grid-column: 1 / -1;
   color: var(--text-faint);
   font-size: 13px;
   text-align: center;
@@ -340,18 +365,22 @@
   .screen {
     padding: var(--space-4) var(--space-4) var(--space-6);
   }
+  /* Stack the panel vertically, but keep name + chips side-by-side so the header
+   * row stays short. */
   .self {
     grid-template-columns: 1fr;
     grid-template-areas:
       'info'
       'hand'
       'controls';
+    gap: var(--space-3);
+  }
+  .selfInfo {
+    flex-direction: row;
+    justify-content: center;
+    gap: var(--space-4);
   }
   .controls {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-  .controls > * {
-    flex: 1 1 auto;
+    min-width: 0;
   }
 }

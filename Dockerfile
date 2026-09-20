@@ -11,6 +11,12 @@ FROM node:22-slim
 
 WORKDIR /app
 
+# CA certificates — the slim base image ships without them, and Litestream (a
+# Go binary) needs the system CA store to verify the object-storage TLS cert.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
 # Install Litestream (single static binary).
 ARG LITESTREAM_VERSION=0.3.13
 ADD https://github.com/benbjohnson/litestream/releases/download/v${LITESTREAM_VERSION}/litestream-v${LITESTREAM_VERSION}-linux-amd64.tar.gz /tmp/litestream.tar.gz

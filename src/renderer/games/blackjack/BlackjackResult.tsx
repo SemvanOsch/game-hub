@@ -1,6 +1,7 @@
 import type { BlackjackResults, BlackjackView } from '@shared/blackjack/view'
 import { WIN_TARGET_CHIPS, formatChips } from '@shared/blackjack/rules'
 import { Button } from '../../components/Button'
+import { ChipPile } from '../../components/chips/ChipPile'
 import type { GameOverUIProps } from '../ui'
 import styles from './BlackjackResult.module.css'
 
@@ -50,6 +51,12 @@ export function BlackjackResult({
           {won ? 'You win the match!' : `${winnerName} wins the match!`}
         </h1>
         <p className={styles.summary}>{summary}</p>
+
+        {winnerId ? (
+          <div className={styles.winnerPile}>
+            <ChipPile amount={winnerChips} size="large" label="chips" animateIn maxColumns={5} />
+          </div>
+        ) : null}
 
         <div className={styles.standings}>
           <div className={styles.standingsHead}>Final chip counts</div>

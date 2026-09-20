@@ -1,10 +1,22 @@
 import type { BlackjackView, BlackjackHandView, BlackjackPlayerView } from '@shared/blackjack/view'
 import type { BlackjackHandStatus } from '@shared/blackjack/engine'
-import { formatChips } from '@shared/blackjack/rules'
 import { Button } from '../../components/Button'
 import { CardHand } from '../../components/cards/CardHand'
+import { ChipPile } from '../../components/chips/ChipPile'
+import { ChipStack } from '../../components/chips/ChipStack'
 import type { GameUIProps } from '../ui'
 import styles from './BlackjackGame.module.css'
+
+/** A player is "all in" when they've committed every chip they have to the table
+ *  and the hand is still live (uncommitted balance 0, but a bet is riding). */
+function isAllIn(player: BlackjackPlayerView, phase: BlackjackView['status']): boolean {
+  return (
+    phase === 'player_turns' &&
+    player.status !== 'eliminated' &&
+    player.chips === 0 &&
+    player.hands.some((h) => h.bet > 0)
+  )
+}
 
 const HAND_STATUS_LABEL: Record<BlackjackHandStatus, string> = {
   playing: 'Playing',
@@ -100,6 +112,7 @@ export function BlackjackGame({ room, view, sendAction, onLeave }: GameUIProps) 
               player={p}
               name={nameOf(p.playerId)}
               showResult={showResult}
+              phase={state.status}
               handNumber={state.handNumber}
               connected={connectedById.get(p.playerId) ?? true}
             />
@@ -121,10 +134,20 @@ export function BlackjackGame({ room, view, sendAction, onLeave }: GameUIProps) 
           <div className={styles.selfInfo}>
             <div className={styles.selfName}>
               <span>{nameOf(self.playerId)} (You)</span>
+              {eliminated ? (
+                <span className={[styles.badge, styles.badgeLose].join(' ')}>Eliminated</span>
+              ) : isAllIn(self, state.status) ? (
+                <span className={[styles.badge, styles.badgePush].join(' ')}>All in</span>
+              ) : null}
             </div>
-            <div className={styles.chips}>
-              <span className={styles.chipVal}>{formatChips(self.chips)}</span>
-              <span className={styles.chipLabel}>chips</span>
+            <div className={styles.bank}>
+              <ChipPile
+                amount={self.chips}
+                size="medium"
+                label="chips"
+                dealKey={self.chips}
+                animateIn
+              />
             </div>
           </div>
 
@@ -148,12 +171,20 @@ export function BlackjackGame({ room, view, sendAction, onLeave }: GameUIProps) 
 
           <div className={styles.controls}>
             {matchOver ? (
-              <Button size="lg" onClick={() => sendAction({ type: 'finish' })}>
+              <Button
+                size="lg"
+                className={styles.fullSpan}
+                onClick={() => sendAction({ type: 'finish' })}
+              >
                 See final results →
               </Button>
             ) : handOver ? (
               state.canStartNextHand ? (
-                <Button size="lg" onClick={() => sendAction({ type: 'next_hand' })}>
+                <Button
+                  size="lg"
+                  className={styles.fullSpan}
+                  onClick={() => sendAction({ type: 'next_hand' })}
+                >
                   Next hand
                 </Button>
               ) : (
@@ -218,15 +249,25 @@ function HandBox({
         .filter(Boolean)
         .join(' ')}
     >
-      <div className={styles.handBoxHead}>
-        <HandBadge hand={hand} showResult={showResult} />
-        <span className={styles.handBet}>
-          Bet {formatChips(hand.bet)}
-          {hand.doubled ? ' ×2' : ''}
-        </span>
-      </div>
       <CardHand cards={hand.cards} size="lg" dealKey={`${handNumber}-${hand.id}`} />
-      <span className={styles.selfTotal}>{hand.total}</span>
+      <div className={styles.handSide}>
+        <div className={styles.handBoxHead}>
+          <HandBadge hand={hand} showResult={showResult} />
+          {hand.doubled ? <span className={styles.doubledTag}>×2</span> : null}
+        </div>
+        <span className={styles.selfTotal}>{hand.total}</span>
+        {hand.bet > 0 ? (
+          <div className={styles.betArea}>
+            <ChipStack
+              amount={hand.bet}
+              size="small"
+              label="bet"
+              dealKey={`${handNumber}-${hand.id}-${hand.bet}`}
+              animateIn
+            />
+          </div>
+        ) : null}
+      </div>
     </div>
   )
 }
@@ -255,17 +296,20 @@ function PlayerSeat({
   player,
   name,
   showResult,
+  phase,
   handNumber,
   connected
 }: {
   player: BlackjackPlayerView
   name: string
   showResult: boolean
+  phase: BlackjackView['status']
   handNumber: number
   connected: boolean
 }) {
   const isCurrent = player.hands.some((h) => h.isActive)
   const eliminated = player.status === 'eliminated'
+  const allIn = isAllIn(player, phase)
   return (
     <div
       className={[
@@ -281,33 +325,54 @@ function PlayerSeat({
           {name}
           {!connected ? <span className={styles.offline}> (offline)</span> : null}
         </span>
-        <span className={styles.seatChips}>
-          {formatChips(player.chips)} chips
-        </span>
+        {eliminated ? (
+          <span className={[styles.badge, styles.badgeLose].join(' ')}>Out</span>
+        ) : allIn ? (
+          <span className={[styles.badge, styles.badgePush].join(' ')}>All in</span>
+        ) : null}
       </div>
-      {player.hands.length > 0 ? (
-        <div className={styles.seatHands}>
-          {player.hands.map((hand) => (
-            <div
-              key={hand.id}
-              className={[styles.seatHand, hand.isActive ? styles.seatHandActive : '']
-                .filter(Boolean)
-                .join(' ')}
-            >
-              <div className={styles.seatHandTop}>
-                <HandBadge hand={hand} showResult={showResult} />
-                <span className={styles.seatTotal}>{hand.cards.length ? hand.total : '—'}</span>
-              </div>
-              <CardHand cards={hand.cards} size="sm" dealKey={`${handNumber}-${hand.id}`} />
-              {player.hands.length > 1 ? (
-                <span className={styles.seatBet}>Bet {formatChips(hand.bet)}</span>
-              ) : null}
-            </div>
-          ))}
+
+      {/* Horizontal body: uncommitted stack beside the hand(s), like your panel. */}
+      <div className={styles.seatBody}>
+        <div className={styles.seatBank}>
+          <ChipStack amount={player.chips} size="small" label="chips" />
         </div>
-      ) : (
-        <span className={styles.spectating}>Spectating</span>
-      )}
+
+        {player.hands.length > 0 ? (
+          <div className={styles.seatHands}>
+            {player.hands.map((hand) => (
+              <div
+                key={hand.id}
+                className={[styles.seatHand, hand.isActive ? styles.seatHandActive : '']
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                <div className={styles.seatHandCards}>
+                  <CardHand cards={hand.cards} size="sm" dealKey={`${handNumber}-${hand.id}`} />
+                  <div className={styles.seatHandMeta}>
+                    <HandBadge hand={hand} showResult={showResult} />
+                    <span className={styles.seatTotal}>{hand.cards.length ? hand.total : '—'}</span>
+                  </div>
+                </div>
+                {hand.bet > 0 ? (
+                  <div className={styles.seatBet}>
+                    <ChipStack
+                      amount={hand.bet}
+                      size="small"
+                      label="bet"
+                      maxChips={4}
+                      dealKey={`${handNumber}-${hand.id}-${hand.bet}`}
+                      animateIn
+                    />
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <span className={styles.spectating}>Spectating</span>
+        )}
+      </div>
     </div>
   )
 }

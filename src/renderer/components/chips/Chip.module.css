@@ -1,0 +1,90 @@
+/* A single poker chip. Colours come from CSS custom properties set per
+ * denomination (--chip-rim / --chip-face / --chip-edge / --chip-ink), so the
+ * chip itself is theme-independent, matching the always-light playing cards. */
+.chip {
+  --chip-d: 42px;
+  width: var(--chip-d);
+  height: var(--chip-d);
+  border-radius: 50%;
+  position: relative;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  color: var(--chip-ink);
+  /* Rim: edge spots (repeating conic wedges) over a top-lit radial sheen over
+   * the solid rim colour. */
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      var(--chip-edge) 0deg 7deg,
+      transparent 7deg 30deg
+    ),
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 58%),
+    var(--chip-rim);
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.38);
+  user-select: none;
+}
+
+/* Inner face: a lighter disc with a dashed ring, giving the classic chip look. */
+.chip::before {
+  content: '';
+  position: absolute;
+  inset: 15%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 60%),
+    var(--chip-face);
+  border: 1px dashed var(--chip-edge);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.14),
+    inset 0 1px 2px rgba(255, 255, 255, 0.22);
+}
+
+.value {
+  position: relative; /* above ::before */
+  z-index: 1;
+  font-weight: 800;
+  font-size: calc(var(--chip-d) * 0.3);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.28);
+}
+
+.small {
+  --chip-d: 28px;
+}
+.medium {
+  --chip-d: 42px;
+}
+.large {
+  --chip-d: 58px;
+}
+
+/* Drop-in entrance: chip falls into place from above with a slight settle. */
+.drop {
+  animation: chip-drop 0.42s cubic-bezier(0.2, 0.85, 0.3, 1) both;
+}
+
+@keyframes chip-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-140%) scale(0.85);
+  }
+  70% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drop {
+    animation: none;
+  }
+}

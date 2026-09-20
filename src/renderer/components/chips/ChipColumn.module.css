@@ -1,0 +1,11 @@
+.column {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* The inline `left`, `bottom` and `z-index` (set by the component) place each
+ * chip within the stack. Centring is done with `left` rather than a transform so
+ * the drop-in animation (which animates `transform`) can't knock it off-centre. */
+.stacked {
+  position: absolute;
+}
