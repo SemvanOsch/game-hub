@@ -1,22 +1,18 @@
 # Litestream configuration — continuously replicates the SQLite database to
 # S3-compatible object storage so it survives redeploys on ephemeral hosts.
 #
-# Values below are read from environment variables set on the host (Render
-# dashboard, Fly secrets, etc.). Litestream expands ${VAR} references at
-# startup. See render.yaml for the variable list.
+# IMPORTANT: the replica is configured as a URL, not as struct fields. That is
+# deliberate. Litestream only applies Cloudflare R2's provider-specific defaults
+# (concurrency=2, disabled request checksums, signed payloads) when a replica is
+# built from a URL via NewReplicaClientFromURL(). The struct-field form skips
+# them, which makes R2 reject ListObjectsV2 with a spurious "404 NoSuchKey"
+# (litestream issue #1096 — the YAML-detection fix, PR #1098, was never merged).
+#
+# Credentials come from AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY, which the
+# Dockerfile entrypoint sets from Render's R2_* environment variables.
 #
 # The DB path must match $DATA_DIR/gamehub.db from the Dockerfile / resolveDbPath().
 dbs:
   - path: /data/gamehub.db
     replicas:
-      - type: s3
-        bucket: ${R2_BUCKET}
-        # Key/prefix for the replica inside the bucket.
-        path: gamehub.db
-        # Cloudflare R2 (or any S3-compatible endpoint). For R2 this looks like
-        # https://<account-id>.r2.cloudflarestorage.com
-        # Litestream 0.5.x auto-detects R2 from this endpoint and applies the
-        # right settings (path-style + concurrency=2 for R2's upload limits).
-        endpoint: ${R2_ENDPOINT}
-        access-key-id: ${R2_ACCESS_KEY_ID}
-        secret-access-key: ${R2_SECRET_ACCESS_KEY}
+      - url: "s3://${R2_BUCKET}/gamehub.db?endpoint=${R2_ENDPOINT}&region=auto"

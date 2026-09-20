@@ -41,8 +41,12 @@ ENV NODE_ENV=production
 ENV DATA_DIR=/data
 EXPOSE 3001
 
+# Litestream's S3 client reads the standard AWS credential variable names.
+# Render stores our R2 S3 credentials as R2_* variables, so expose them under
+# those names before both restore and replication start.
+#
 # On boot: restore the latest snapshot from object storage if the replica
 # exists (no-op on the very first deploy), then run the server UNDER
 # Litestream so every write is replicated and a final sync happens on
 # SIGTERM (redeploy/shutdown).
-CMD ["sh", "-c", "litestream restore -if-replica-exists /data/gamehub.db || echo '[entrypoint] no replica to restore yet (fresh start)'; exec litestream replicate -exec 'npm run start:server'"]
+CMD ["sh", "-c", "export AWS_ACCESS_KEY_ID=\"${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID must be set}\" AWS_SECRET_ACCESS_KEY=\"${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY must be set}\"; litestream restore -if-replica-exists /data/gamehub.db || echo '[entrypoint] no replica to restore yet (fresh start)'; exec litestream replicate -exec 'npm run start:server'"]
