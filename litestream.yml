@@ -1,0 +1,22 @@
+# Litestream configuration — continuously replicates the SQLite database to
+# S3-compatible object storage so it survives redeploys on ephemeral hosts.
+#
+# Values below are read from environment variables set on the host (Render
+# dashboard, Fly secrets, etc.). Litestream expands ${VAR} references at
+# startup. See render.yaml for the variable list.
+#
+# The DB path must match $DATA_DIR/gamehub.db from the Dockerfile / resolveDbPath().
+dbs:
+  - path: /data/gamehub.db
+    replicas:
+      - type: s3
+        bucket: ${R2_BUCKET}
+        # Key/prefix for the replica inside the bucket.
+        path: gamehub.db
+        # Cloudflare R2 (or any S3-compatible endpoint). For R2 this looks like
+        # https://<account-id>.r2.cloudflarestorage.com
+        endpoint: ${R2_ENDPOINT}
+        region: auto
+        access-key-id: ${R2_ACCESS_KEY_ID}
+        secret-access-key: ${R2_SECRET_ACCESS_KEY}
+        force-path-style: true

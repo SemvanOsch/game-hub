@@ -1,10 +1,27 @@
 # Render Blueprint — lets Render auto-configure the multiplayer server.
-# On Render: New → Blueprint → pick this repo → Apply. No manual settings needed.
+# On Render: New → Blueprint → pick this repo → Apply.
+#
+# Builds from the Dockerfile so Litestream is available to persist the SQLite
+# database (accounts/friends/records) across redeploys via object storage.
+# Set the R2_* secrets in the Render dashboard (they are not stored in git).
 services:
   - type: web
     name: yahtzee-multiplayer
-    runtime: node
+    runtime: docker
     plan: free
-    buildCommand: npm install
-    startCommand: npm run start:server
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /health
+    envVars:
+      # Where the SQLite file lives inside the container (matches litestream.yml).
+      - key: DATA_DIR
+        value: /data
+      # Cloudflare R2 credentials — set these in the dashboard (sync: false
+      # keeps the secret values out of the blueprint / git).
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_ENDPOINT
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false

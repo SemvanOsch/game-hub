@@ -128,6 +128,10 @@ The renderer reads `VITE_MULTIPLAYER_SERVER_URL` (via `src/renderer/config.ts`),
 `ws://localhost:3001`. `.env` sets it for local dev; `.env.production` bakes the public `wss://`
 URL into `build:app`. The server port comes from `PORT` / `MULTIPLAYER_SERVER_PORT` (default 3001).
 
-The SQLite file path comes from `DATA_DIR`/`DB_PATH`. On a cloud host, point `DATA_DIR` at a
-**persistent disk** or accounts/records reset on redeploy. Passwords travel over TLS in prod
-(`wss://`); local dev is plaintext `ws://` (fine for localhost).
+The SQLite file path comes from `DATA_DIR`/`DB_PATH`. Cloud hosts have **ephemeral**
+filesystems, so that file is wiped on every redeploy. The `Dockerfile` bundles **Litestream**,
+which streams the DB to S3-compatible object storage (Cloudflare R2) and restores it on boot —
+so no application code changes and no paid persistent disk are needed. Configure it via the
+`R2_*` env vars in `litestream.yml` / `render.yaml` (`render.yaml` uses `runtime: docker`).
+Alternatively, point `DATA_DIR` at a real persistent disk if the host offers one. Passwords
+travel over TLS in prod (`wss://`); local dev is plaintext `ws://` (fine for localhost).
