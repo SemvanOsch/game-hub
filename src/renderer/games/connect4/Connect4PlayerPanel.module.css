@@ -1,0 +1,64 @@
+.panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  min-width: 160px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* The player to move gets a clear ring so the active turn is unmistakable. */
+.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), var(--shadow);
+  background: var(--accent-soft);
+}
+
+.disc {
+  width: 30px;
+  flex: none;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.name {
+  font-weight: 650;
+  font-size: 14px;
+}
+.you {
+  color: var(--accent-hover);
+  font-weight: 600;
+}
+.offline {
+  color: var(--danger);
+  font-weight: 500;
+  font-size: 12px;
+}
+.color {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.vs {
+  color: var(--text-faint);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}

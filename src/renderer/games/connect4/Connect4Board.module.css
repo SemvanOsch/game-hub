@@ -1,0 +1,66 @@
+.wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* The physical board: a deep blue frame holding the grid of sockets. Keeps its
+ * 7:6 aspect ratio and scales smoothly with the window; never distorts. */
+.frame {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  gap: clamp(4px, 1.1vw, 10px);
+  width: 100%;
+  max-width: 560px;
+  aspect-ratio: var(--cols) / var(--rows);
+  padding: clamp(8px, 1.8vw, 16px);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, #2f6fd0 0%, #2657ad 55%, #1e478f 100%);
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.22),
+    inset 0 -4px 10px rgba(0, 0, 0, 0.35),
+    var(--shadow);
+}
+
+/* Each column is a single accessible drop button spanning the board height. */
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 1.1vw, 10px);
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius);
+  cursor: default;
+}
+
+.droppable {
+  cursor: pointer;
+}
+
+/* Highlight the hovered / keyboard-selected column while it's playable. */
+.selected.droppable {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.column:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.column:disabled {
+  cursor: not-allowed;
+}
+
+.slot {
+  display: block;
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selected.droppable {
+    transition: none;
+  }
+}

@@ -1,0 +1,182 @@
+# Multiplayer Game App — General Context
+
+I am building a **React + Electron desktop multiplayer game application**.
+
+The app is a collection of multiplayer games where users can choose a game, host or join a room, choose/display a player name, and play together in real time.
+
+## Current Games
+
+The app currently includes:
+
+* Yahtzee
+* Battleships
+* Blackjack
+* Rummikub
+* Connect 4
+* Poker / Texas Hold'em
+
+More games may be added in the future.
+
+## General Development Approach
+
+When suggesting or implementing features, **work with the existing project rather than assuming a new architecture**.
+
+Always consider:
+
+* Existing game architecture
+* Multiplayer/room system
+* Server/client communication
+* Existing state management
+* Existing UI components
+* Existing styling system
+* Existing card/chip components
+* Existing animations
+* Disconnect/reconnect handling
+* Game-over/rematch systems
+
+Prefer **reusing and extending existing systems** over creating duplicate implementations.
+
+Do not rewrite large parts of the application unless there is a clear reason to do so.
+
+## Multiplayer
+
+Games should generally be **server-authoritative**.
+
+The client requests an action and the server validates it and updates the authoritative game state.
+
+For example:
+
+```text
+Client action
+    ↓
+Server validation
+    ↓
+Authoritative state update
+    ↓
+Broadcast updated state
+    ↓
+Clients render the result
+```
+
+The client should never be trusted for things such as:
+
+* Scores
+* Chip balances
+* Random outcomes
+* Cards
+* Turns
+* Win conditions
+* Game-over state
+* Legal actions
+* Hidden information
+
+Protect against:
+
+* Duplicate actions
+* Out-of-turn actions
+* Race conditions
+* Actions after game over
+* Client manipulation
+* Stale actions
+
+## Game Logic
+
+Keep important game rules separate from UI code where practical.
+
+Prefer pure, testable functions for:
+
+* Rules
+* Validation
+* Scoring
+* Win detection
+* Random/game-state calculations
+* Card/tile/board logic
+
+Add automated tests for important game mechanics and edge cases.
+
+## UI / Visual Style
+
+The goal is a **polished desktop multiplayer game experience**, rather than a basic prototype.
+
+Prefer:
+
+* Custom graphical UI
+* Reusable components
+* Clear visual states
+* Responsive layouts
+* Smooth animations
+* Good visual hierarchy
+* Accessible controls
+* Game-specific visual presentation
+
+Avoid:
+
+* Emoji as final game graphics
+* Placeholder graphics in finished features
+* Generic interfaces when a game-specific design makes more sense
+* Duplicating components that already exist elsewhere in the project
+
+Use proper graphical assets, SVGs, CSS graphics, or reusable components for important visual elements.
+
+## Cards and Chips
+
+The project already has casino-style functionality, particularly through Blackjack.
+
+When implementing another card/chip game, **reuse existing card and chip components where appropriate** rather than creating completely separate versions.
+
+Numeric values such as chip balances must remain authoritative in game state. Visual chips are a representation of those values.
+
+## Player / Room System
+
+Players can:
+
+* Create/host games
+* Join games
+* Choose/display a name
+* Play with other users in multiplayer rooms
+
+New games should integrate into the existing room and game-selection system.
+
+Do not create a separate account/authentication system unless specifically requested.
+
+## Disconnects
+
+Use the application's existing disconnect/reconnect architecture whenever possible.
+
+If a particular game needs special disconnect behaviour, define it explicitly rather than assuming the same behaviour applies to every game.
+
+## Adding New Games
+
+When I ask for a new game or feature, first consider:
+
+1. How the existing games are structured.
+2. What existing components can be reused.
+3. How multiplayer actions are currently handled.
+4. How authoritative state is maintained.
+5. How the new game should fit into the existing game-selection/room system.
+6. What edge cases and race conditions need to be handled.
+7. What tests are needed.
+
+The implementation should feel like a natural part of the existing application.
+
+## Important Preference
+
+When I ask for a prompt for another coding AI/tool, make it **implementation-ready and detailed**, but tailored to this existing project.
+
+Tell the coding agent to inspect the existing codebase first and extend what is already there.
+
+Do not assume file names, frameworks, networking libraries, or architecture that have not been established.
+
+When I ask for a new game, include the important:
+
+* Game rules
+* Multiplayer behaviour
+* Server authority
+* UI/UX
+* Win/loss conditions
+* Edge cases
+* Security/cheating considerations
+* Testing requirements
+* Integration requirements
+
+The final result should be polished, multiplayer-safe, and consistent with the rest of the application.

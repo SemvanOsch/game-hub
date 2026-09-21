@@ -1,0 +1,117 @@
+.screen {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5) var(--space-7);
+  animation: fade-in 0.25s ease;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg, 0 20px 40px rgba(0, 0, 0, 0.35));
+}
+.tag {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.outcome {
+  margin: var(--space-2) 0 0;
+  font-size: 30px;
+  font-weight: 900;
+}
+.victory {
+  color: var(--success);
+}
+.defeat {
+  color: var(--text);
+}
+.reason {
+  margin: var(--space-2) 0 var(--space-4);
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.winnerPile {
+  margin-bottom: var(--space-5);
+}
+.standings {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.standingsHead {
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-2);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  text-align: left;
+}
+.row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border);
+  text-align: left;
+}
+.winnerRow {
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+}
+.rank {
+  font-weight: 800;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.name {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.status {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.chips {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  width: 100%;
+}
+.actions > * {
+  flex: 1;
+}
+.hostNote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+}

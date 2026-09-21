@@ -1,0 +1,110 @@
+.sheet {
+  position: sticky;
+  top: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+/* The toggle is only used on narrow layouts; hidden on wide screens. */
+.toggle {
+  display: none;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-2);
+  border: none;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.chevron {
+  font-size: 18px;
+  line-height: 1;
+  color: var(--text-dim);
+}
+
+.list {
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  padding: var(--space-3);
+}
+.heading {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+}
+.sub {
+  margin: 1px 0 var(--space-2);
+  font-size: 10px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: var(--space-2);
+  padding: 5px 0;
+  border-top: 1px solid var(--border);
+}
+.entry:first-of-type {
+  border-top: none;
+}
+.entryHead {
+  grid-column: 1;
+}
+.entryName {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text);
+}
+/* The card example sits to the RIGHT of the name+description, scaled down and
+ * height-clamped so it reclaims the whitespace a plain transform would leave. */
+.cards {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  gap: 1px;
+  /* width/height clamp the layout box to the SCALED size (5×48px + gaps ≈ 244px
+   * → 122px at 0.5); transform only shrinks pixels, not the reserved box. */
+  width: 124px;
+  height: 34px;
+  transform: scale(0.5);
+  transform-origin: left center;
+  align-items: center;
+}
+.hl {
+  /* forming cards stand out */
+}
+.dim {
+  opacity: 0.35;
+}
+.desc {
+  grid-column: 1;
+  margin: 1px 0 0;
+  font-size: 10.5px;
+  line-height: 1.25;
+  color: var(--text-dim);
+}
+
+@media (max-width: 900px) {
+  .sheet {
+    position: static;
+  }
+  .toggle {
+    display: flex;
+  }
+  .list {
+    display: none;
+    max-height: 60vh;
+  }
+  .open .list {
+    display: block;
+  }
+}

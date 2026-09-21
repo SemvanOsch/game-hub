@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { SHIP_DEFINITIONS, type Ship } from '@shared/battleships/types'
 import type { BattleshipsResults, BattleshipsView } from '@shared/battleships/view'
 import { Button } from '../../components/Button'
+import { BattleshipsBoard } from './BattleshipsBoard'
+import { buildEnemyCells, buildOwnCells } from './boardModel'
 import { FleetStatus, type FleetDisplayEntry } from './FleetStatus'
 import type { GameOverUIProps } from '../ui'
 import styles from './BattleshipsResult.module.css'
@@ -43,6 +46,47 @@ export function BattleshipsResult({
 
   const ownFleet = toFleetDisplay(state.own.ships)
   const enemyFleet = toFleetDisplay(state.enemy.revealedShips)
+
+  // Let players inspect the final board before jumping to the results panel.
+  const [phase, setPhase] = useState<'review' | 'results'>('review')
+
+  if (phase === 'review') {
+    const enemyGrid = buildEnemyCells(state)
+    const ownGrid = buildOwnCells(state)
+    return (
+      <div className={styles.review}>
+        <div className={styles.reviewHead}>
+          <h1 className={[styles.outcome, won ? styles.victory : styles.defeat].join(' ')}>
+            {won ? 'Victory!' : 'Defeat'}
+          </h1>
+          <p className={styles.summary}>
+            Both fleets are revealed. Take a look, then see the full results.
+          </p>
+        </div>
+        <div className={styles.boards}>
+          <section className={styles.boardCol}>
+            <div className={styles.boardHead}>
+              <h2>Enemy Waters</h2>
+              <span className={styles.boardSub}>{opponentName}&rsquo;s fleet</span>
+            </div>
+            <BattleshipsBoard title={`Enemy waters — ${opponentName}'s fleet`} grid={enemyGrid} />
+          </section>
+          <section className={styles.boardCol}>
+            <div className={styles.boardHead}>
+              <h2>Your Fleet</h2>
+              <span className={styles.boardSub}>{myName}</span>
+            </div>
+            <BattleshipsBoard title={`Your fleet — ${myName}`} grid={ownGrid} />
+          </section>
+        </div>
+        <div className={styles.actions}>
+          <Button size="lg" onClick={() => setPhase('results')}>
+            See results
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.screen}>

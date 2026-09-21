@@ -5,6 +5,8 @@
  */
 import type { ComponentType } from 'react'
 import { RummikubIcon } from './rummikub/RummikubIcon'
+import { Connect4Icon } from './connect4/Connect4Icon'
+import { PokerIcon } from './poker/PokerIcon'
 
 export interface GameDefinition {
   id: string
@@ -64,6 +66,29 @@ export const GAMES: GameDefinition[] = [
     multiplayer: true,
     minPlayers: 2,
     maxPlayers: 4,
+    available: true
+  },
+  {
+    id: 'connect4',
+    name: 'Connect 4',
+    description: 'Classic four-in-a-row strategy game for 2 players.',
+    icon: '',
+    Icon: Connect4Icon,
+    multiplayer: true,
+    minPlayers: 2,
+    maxPlayers: 2,
+    available: true
+  },
+  {
+    id: 'poker',
+    name: 'Texas Hold’em',
+    description:
+      'No-Limit poker for 2–8. Outlast the table — last player with chips wins. Blinds, side pots and showdowns included.',
+    icon: '',
+    Icon: PokerIcon,
+    multiplayer: true,
+    minPlayers: 2,
+    maxPlayers: 8,
     available: true
   }
 ]

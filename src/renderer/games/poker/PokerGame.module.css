@@ -1,0 +1,436 @@
+.screen {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-6) var(--space-7);
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- Header ------------------------------------------------------------- */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.leave {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+}
+.leave:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.handInfo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.handNo {
+  font-weight: 700;
+  font-size: 15px;
+}
+.rule {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* --- Layout (cheat sheet + table) -------------------------------------- */
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+.main {
+  min-width: 0;
+}
+
+/* --- Table ------------------------------------------------------------- */
+.tableWrap {
+  padding: 44px 40px;
+}
+.table {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  border-radius: 50% / 42%;
+  background:
+    radial-gradient(120% 130% at 50% 8%, rgba(255, 255, 255, 0.08), transparent 55%),
+    linear-gradient(165deg, #1f6f4a, #123d2e 70%);
+  border: 10px solid #3a2417;
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.45),
+    var(--shadow-lg, 0 20px 40px rgba(0, 0, 0, 0.4));
+}
+
+.centre {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: min(70%, 460px);
+}
+.phaseTag {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+.pot {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 16px;
+  border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, 0.32);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.potLabel {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+.potValue {
+  font-weight: 800;
+  font-size: 20px;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.sidePots {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.sidePot {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.25);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+.community {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.banner {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* --- Seats ------------------------------------------------------------- */
+.seatAnchor {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+.seat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 118px;
+  padding: 8px 8px 10px;
+  border-radius: var(--radius-lg);
+  background: rgba(12, 18, 16, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.selfSeat {
+  width: 150px;
+  background: rgba(16, 24, 22, 0.94);
+}
+.current {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 18px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.folded {
+  opacity: 0.55;
+}
+.eliminated {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+}
+
+.blindBadges {
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  display: flex;
+  gap: 3px;
+  z-index: 3;
+}
+.chipBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+.dealerBadge {
+  background: #f4f4f5;
+  color: #1a1a1a;
+  border-color: #c9c9cf;
+}
+.sbBadge {
+  background: #2563a8;
+}
+.bbBadge {
+  background: #a5223a;
+}
+
+.seatCards {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.noCards {
+  height: 44px;
+}
+.seatInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  line-height: 1.2;
+}
+.seatName {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.offline {
+  color: var(--warning);
+  font-weight: 600;
+}
+.seatChips {
+  font-size: 12px;
+  color: #d7f2e4;
+  font-variant-numeric: tabular-nums;
+}
+.seatHandLabel {
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: 700;
+  margin-top: 2px;
+}
+.seatStatus {
+  min-height: 4px;
+}
+.tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+}
+.tagOut {
+  background: var(--danger-soft, rgba(220, 60, 60, 0.2));
+  color: var(--danger);
+}
+.tagFold {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.75);
+}
+.tagAllIn {
+  background: rgba(245, 197, 24, 0.2);
+  color: #f5c518;
+}
+.tagWin {
+  background: color-mix(in srgb, var(--success) 25%, transparent);
+  color: var(--success);
+}
+/* A player's committed bet, floating on the felt between their seat and the pot. */
+.betAnchor {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* --- Action area ------------------------------------------------------- */
+.actionArea {
+  margin-top: var(--space-5);
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.controls {
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.controlRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}
+.sizeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.slider {
+  flex: 1;
+  min-width: 160px;
+  accent-color: var(--accent);
+}
+.presets {
+  display: flex;
+  gap: 6px;
+}
+.presets button {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+.presets button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.turnWait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.waitNote {
+  color: var(--text-dim);
+  font-size: 14px;
+  font-weight: 600;
+}
+.bestHand {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: center;
+}
+
+.handOver {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+.handOverText {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+}
+
+/* --- Action log -------------------------------------------------------- */
+.log {
+  margin-top: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.logLine {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.logLine:last-child {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* --- Responsive -------------------------------------------------------- */
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .tableWrap {
+    padding: 40px 20px;
+  }
+  .seat {
+    width: 96px;
+  }
+  .selfSeat {
+    width: 118px;
+  }
+}
+
+@media (max-width: 560px) {
+  .screen {
+    padding: var(--space-4) var(--space-3) var(--space-6);
+  }
+  .controlRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .seat {
+    width: 78px;
+    padding: 5px;
+  }
+  .selfSeat {
+    width: 96px;
+  }
+  .seatName {
+    font-size: 11px;
+  }
+}
