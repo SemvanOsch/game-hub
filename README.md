@@ -13,47 +13,18 @@ then **host** or **join** a real-time match over WebSockets and play a complete 
 
 ## Download & install
 
-Grab the latest installer for your platform from the
+Game Hub is currently distributed for **Windows**. Grab the latest installer from the
 [**Releases**](https://github.com/SemvanOsch/game-hub/releases/latest) page:
 
-| Platform | File | How to install |
-| -------- | ---- | -------------- |
-| **Windows** | `GameHub-Setup-<version>.exe` | Run the installer and follow the prompts. Windows SmartScreen may warn about an unrecognized app — click **More info → Run anyway**. |
-| **macOS** | `Game Hub-<version>.dmg` | Open the `.dmg`, drag **Game Hub** into Applications — then see the steps below to get past Gatekeeper on first launch. |
-| **Linux** | `Game Hub-<version>.AppImage` | Make it executable (`chmod +x`) and run it. |
+1. Under **Assets**, download `GameHub-Setup-<version>.exe`.
+2. Run the installer and follow the prompts. Windows SmartScreen may warn about an unrecognized
+   app — click **More info → Run anyway** (the build isn't code-signed).
 
 Once installed, the app connects to the hosted multiplayer server automatically — just pick a
 display name (or log in) and start playing. The app also checks for and installs updates on its
 own via `electron-updater`.
 
-### macOS: getting past Gatekeeper
-
-Game Hub isn't code-signed or notarized by Apple, so macOS will refuse to open it the first time
-with a message like *"Game Hub" is damaged and can't be opened* or *cannot be opened because the
-developer cannot be verified*. This is expected for an unsigned app — the file isn't actually
-damaged. Do this once:
-
-1. **Download the right `.dmg` for your Mac.** Apple Silicon (M1/M2/M3/M4) Macs use the `arm64`
-   build; older Intel Macs use the `x64` build. If only one `.dmg` is published, it's a universal
-   build that works on both.
-2. **Install it.** Double-click the `.dmg`, then drag the **Game Hub** icon onto the
-   **Applications** folder shortcut. Eject the disk image afterwards.
-3. **Open it the first time** using one of these:
-   - **Right-click method (simplest):** open your **Applications** folder in Finder, right-click
-     (or Control-click) **Game Hub**, choose **Open**, then click **Open** again in the dialog.
-   - **System Settings method (macOS Ventura and later):** double-click the app once and dismiss
-     the warning, then go to **System Settings → Privacy & Security**, scroll to the Security
-     section, and click **Open Anyway** next to the Game Hub message. Confirm with **Open**.
-4. **If macOS still says the app is "damaged"** (common on Apple Silicon, because the download
-   picked up a quarantine flag), remove the quarantine attribute in Terminal, then open it
-   normally:
-
-   ```bash
-   xattr -dr com.apple.quarantine "/Applications/Game Hub.app"
-   ```
-
-You only need to do this once — after the first successful launch, macOS remembers your choice and
-the app (including its auto-updates) opens normally from then on.
+> macOS and Linux builds aren't published yet.
 
 > Prefer to build it yourself or run against your own server? See
 > [Getting started](#getting-started) and [Building the desktop app](#building-the-desktop-app).
