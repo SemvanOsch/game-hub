@@ -6,9 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Game Hub — a desktop **multiplayer game launcher** (React + TypeScript + Electron) with an
 authoritative WebSocket server. Games: **Yahtzee** (2–6), **Battleships** (1v1), **Blackjack**
-(2–6), **Rummikub** (2–4), **Connect 4** (1v1) and **Texas Hold'em** (2–8). All plug into one
-game-agnostic multiplayer core (see the architecture section) — the launcher shell, lobbies,
-networking and records don't know about any specific game.
+(2–6), **Rummikub** (2–4), **Connect 4** (1v1), **Texas Hold'em** (2–8), **UNO** (2–8) and
+**Zip Battle Royale** (2–6, a 3-round speed-solve race on the LinkedIn-style Zip puzzle). All
+plug into one game-agnostic multiplayer core (see the architecture section) — the launcher shell,
+lobbies, networking and records don't know about any specific game.
+
+**Server-driven timers:** the multiplayer core is otherwise purely action-driven, but the engine
+interface has two optional hooks — `nextTimeout(state)` (when the server should next act) and
+`tick(state, now)` (a time-based reducer) — that `GameServer` schedules per room. Zip uses these
+for its authoritative round timeout; games without time pressure simply omit them.
 
 Optional **accounts** add friends, per-game win/loss records, and direct game invites. Login is
 optional — guests still play with just a display name; logging in unlocks the social features.

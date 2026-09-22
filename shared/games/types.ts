@@ -53,6 +53,22 @@ export interface GameEngine<S = unknown, V = unknown, A = unknown, R = unknown> 
 
   isFinished(state: S): boolean
 
+  /**
+   * Optional server-driven timeout. Returns the absolute epoch-ms timestamp at
+   * which the server should call {@link tick} for this state, or null when no
+   * time-based transition is pending. The multiplayer core schedules a single
+   * timer per room from this; games without time pressure simply omit it.
+   */
+  nextTimeout?(state: S): number | null
+
+  /**
+   * Optional time-based reducer. Called by the server once the wall clock passes
+   * {@link nextTimeout} (with the current server time), letting the engine
+   * advance transitions that depend on elapsed time rather than a client action
+   * (e.g. a round timing out). Must be pure and return the next state.
+   */
+  tick?(state: S, now: number): S
+
   /** Final results payload, broadcast once the game finishes. */
   getResults(state: S): R
 

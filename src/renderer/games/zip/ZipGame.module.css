@@ -1,0 +1,328 @@
+.screen {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-5) var(--space-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-3);
+}
+.leave {
+  justify-self: start;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+}
+.leave:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.titleWrap {
+  text-align: center;
+}
+.title {
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.round {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-hover);
+}
+.lbToggle {
+  justify-self: end;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+}
+.lbToggle:hover,
+.lbToggle[aria-pressed='true'] {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+/* Status / timer banner */
+.statusBanner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  text-align: center;
+}
+.statusBanner.solving {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.statusBanner.done {
+  border-color: var(--success);
+  background: rgba(67, 197, 158, 0.14);
+}
+.statusBanner.dnf {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+.bannerTitle {
+  font-size: 18px;
+  font-weight: 800;
+}
+.done .bannerTitle {
+  color: var(--success);
+}
+.dnf .bannerTitle {
+  color: var(--danger);
+}
+.timer,
+.time {
+  font-family: var(--font-mono);
+  font-size: 30px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.time {
+  color: var(--success);
+}
+.sub {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.generating {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-7) var(--space-4);
+  text-align: center;
+}
+
+.boardArea {
+  position: relative;
+  margin: var(--space-2) 0;
+}
+
+/* Countdown overlay */
+.countdown {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background: rgba(10, 12, 16, 0.55);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(1px);
+}
+.countNumber {
+  font-size: 84px;
+  font-weight: 900;
+  color: var(--accent-hover);
+  line-height: 1;
+  animation: pop 0.4s ease;
+}
+@keyframes pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0.3;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.countHint {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.hint {
+  font-size: 12px;
+  color: var(--text-faint);
+  flex: 1;
+  min-width: 180px;
+}
+
+/* Player status chips */
+.statusStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: center;
+}
+.statusChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 12px;
+}
+.chipGone {
+  opacity: 0.5;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.pSolving {
+  background: var(--warning);
+}
+.pDone {
+  background: var(--success);
+}
+.pDnf {
+  background: var(--danger);
+}
+.chipName {
+  font-weight: 600;
+}
+.chipStatus {
+  color: var(--text-faint);
+}
+
+/* Round results */
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  animation: fade-in 0.25s ease;
+}
+.resultsTitle {
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+}
+.placeList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.placeRow {
+  display: grid;
+  grid-template-columns: 52px 1fr auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.placeRow.placeSelf {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.place {
+  font-weight: 800;
+  color: var(--text-dim);
+}
+.placeName {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.you {
+  color: var(--accent-hover);
+}
+.placeTime {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+.placePoints {
+  font-weight: 800;
+  color: var(--success);
+  min-width: 34px;
+  text-align: right;
+}
+
+.advance {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-2);
+}
+.waitHost {
+  font-size: 14px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* Leaderboard overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 12, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: 40;
+  animation: fade-in 0.15s ease;
+}
+.overlayPanel {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (max-width: 560px) {
+  .screen {
+    padding: var(--space-3) var(--space-3) var(--space-6);
+  }
+  .timer,
+  .time {
+    font-size: 26px;
+  }
+}

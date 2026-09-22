@@ -204,6 +204,30 @@ export class Room {
     return result
   }
 
+  // --- Server-driven timers ------------------------------------------------
+
+  /**
+   * Absolute epoch-ms timestamp at which the server should {@link tick} this
+   * room's game, or null if the engine has no pending time-based transition.
+   * Games without time pressure never define `nextTimeout`, so this is null and
+   * no timer is ever scheduled for them.
+   */
+  nextTimeoutAt(): number | null {
+    if (!this.game || this.status !== 'in-game' || !this.engine.nextTimeout) return null
+    return this.engine.nextTimeout(this.game)
+  }
+
+  /**
+   * Advance time-based transitions using the current server clock. Called by the
+   * server once the wall clock passes {@link nextTimeoutAt}. No-op unless the
+   * engine defines a `tick` and a game is in progress.
+   */
+  tick(now: number): void {
+    if (!this.game || this.status !== 'in-game' || !this.engine.tick) return
+    this.game = this.engine.tick(this.game, now)
+    if (this.engine.isFinished(this.game)) this.status = 'finished'
+  }
+
   // --- Messaging -----------------------------------------------------------
 
   send(id: string, message: ServerMessage): void {

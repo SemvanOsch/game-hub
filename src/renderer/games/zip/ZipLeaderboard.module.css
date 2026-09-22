@@ -1,0 +1,77 @@
+.board {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+}
+.board.compact {
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-2);
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  margin-bottom: var(--space-3);
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+.compact .row {
+  padding: 4px 6px;
+  font-size: 13px;
+}
+.row.self {
+  background: var(--accent-soft);
+}
+.row.gone {
+  opacity: 0.5;
+}
+
+.position {
+  font-weight: 800;
+  color: var(--text-dim);
+  text-align: center;
+}
+.row.self .position {
+  color: var(--accent-hover);
+}
+
+.name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.you {
+  color: var(--accent-hover);
+  font-weight: 700;
+}
+
+.points {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.pts {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-faint);
+  margin-left: 2px;
+}

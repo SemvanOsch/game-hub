@@ -8,6 +8,7 @@ import { RummikubIcon } from './rummikub/RummikubIcon'
 import { Connect4Icon } from './connect4/Connect4Icon'
 import { PokerIcon } from './poker/PokerIcon'
 import { UnoIcon } from './uno/UnoIcon'
+import { ZipIcon } from './zip/ZipIcon'
 
 export interface GameDefinition {
   id: string
@@ -91,6 +92,16 @@ export const GAMES: GameDefinition[] = [
     multiplayer: true,
     minPlayers: 2,
     maxPlayers: 8,
+    available: true
+  },
+  {
+    id: 'zip',
+    name: 'Zip Battle Royale',
+    icon: '',
+    Icon: ZipIcon,
+    multiplayer: true,
+    minPlayers: 2,
+    maxPlayers: 6,
     available: true
   }
 ]

@@ -1,0 +1,78 @@
+.board {
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  touch-action: none; /* let us own drag gestures on touch devices */
+  user-select: none;
+}
+.board.interactive {
+  cursor: crosshair;
+}
+.board.locked {
+  opacity: 0.85;
+}
+
+.bg {
+  fill: var(--surface);
+  stroke: var(--border);
+  stroke-width: 1.5;
+}
+
+.cell {
+  fill: var(--surface-2);
+  stroke: var(--border);
+  stroke-width: 1;
+  transition: fill 0.12s ease;
+}
+.cell.visited {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+
+.path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 24;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.9;
+}
+.locked .path {
+  opacity: 0.7;
+}
+
+.head {
+  fill: var(--accent-hover);
+  stroke: var(--accent-contrast);
+  stroke-width: 2;
+  transition: cx 0.08s linear, cy 0.08s linear;
+}
+
+.wall {
+  stroke: var(--danger);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.checkpoint {
+  fill: var(--surface-3);
+  stroke: var(--border-strong);
+  stroke-width: 2;
+}
+.checkpoint.endpoint {
+  fill: var(--accent);
+  stroke: var(--accent-hover);
+}
+
+.checkpointText {
+  fill: var(--text);
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: 22px;
+  pointer-events: none;
+}
+.endpointText {
+  fill: var(--accent-contrast);
+}

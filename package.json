@@ -13,6 +13,7 @@
     "build": "npm run typecheck && electron-vite build",
     "build:app": "npm run build && electron-builder",
     "build:icon": "node scripts/generate-icon.mjs build/icon-source.webp",
+    "gen:puzzles": "tsx scripts/gen-zip-puzzles.ts",
     "preview": "electron-vite preview",
     "typecheck": "npm run typecheck:node && npm run typecheck:web && npm run typecheck:server",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json",

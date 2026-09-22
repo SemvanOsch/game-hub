@@ -41,6 +41,8 @@ const MAX_NAME_LENGTH = 24
 export class GameServer {
   private rooms = new Map<string, Room>()
   private clients = new Map<WebSocket, ClientState>()
+  /** Pending server-driven game timers, one per room (e.g. Zip round timeouts). */
+  private roomTimers = new Map<string, ReturnType<typeof setTimeout>>()
   private readonly db: DB
   private readonly sessions = new SessionStore()
   /** userId -> the set of that account's live sockets (multi-window safe). */
@@ -207,6 +209,7 @@ export class GameServer {
     room.handleDisconnect(playerId)
     if (room.isEmpty) {
       this.rooms.delete(room.code)
+      this.clearRoomTimer(room.code)
     } else if (!wasFinished) {
       this.broadcastState(room)
     }
@@ -275,6 +278,7 @@ export class GameServer {
   private broadcastState(room: Room): void {
     if (room.isEmpty) {
       this.rooms.delete(room.code)
+      this.clearRoomTimer(room.code)
       return
     }
     const roomState = room.toRoomState()
@@ -298,6 +302,43 @@ export class GameServer {
       }
     } else {
       room.broadcast({ type: 'room_update', room: roomState })
+    }
+    // (Re)arm any server-driven game timer for this room's current state.
+    this.scheduleRoomTimer(room)
+  }
+
+  /**
+   * Arm (or re-arm) a room's server-driven timer from its engine's
+   * `nextTimeout`. When it fires the server advances the game via `tick` and
+   * re-broadcasts, which schedules the next timer. Rooms whose engine has no
+   * time-based transitions never get a timer. Fully game-agnostic.
+   */
+  private scheduleRoomTimer(room: Room): void {
+    this.clearRoomTimer(room.code)
+    const at = room.nextTimeoutAt()
+    if (at === null) return
+    const delay = Math.max(0, at - Date.now())
+    const timer = setTimeout(() => {
+      this.roomTimers.delete(room.code)
+      // The room may have been replaced or removed while we waited.
+      if (this.rooms.get(room.code) !== room) return
+      try {
+        room.tick(Date.now())
+        this.broadcastState(room)
+      } catch (err) {
+        console.error('Error in room timer tick', room.code, err)
+      }
+    }, delay)
+    // Don't let a pending game timer keep the process alive on its own.
+    ;(timer as { unref?: () => void }).unref?.()
+    this.roomTimers.set(room.code, timer)
+  }
+
+  private clearRoomTimer(code: string): void {
+    const timer = this.roomTimers.get(code)
+    if (timer) {
+      clearTimeout(timer)
+      this.roomTimers.delete(code)
     }
   }
 
