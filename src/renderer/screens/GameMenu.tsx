@@ -15,7 +15,6 @@ export function GameMenu({ game, connecting, onHost, onJoin, onBack }: GameMenuP
   return (
     <Panel
       title={game.name}
-      subtitle={game.description}
       icon={game.icon}
       onBack={onBack}
       backLabel="Home"

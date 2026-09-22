@@ -1,6 +1,6 @@
 {
   "name": "game-hub",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Game Hub — a desktop multiplayer game hub built with React, TypeScript and Electron. Games: Yahtzee, Battleships and Blackjack.",
   "author": "",
   "license": "MIT",

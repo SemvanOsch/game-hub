@@ -165,8 +165,8 @@ export class Room {
     )
   }
 
-  startGame(): void {
-    this.game = this.engine.createGame(this.order)
+  startGame(options?: unknown): void {
+    this.game = this.engine.createGame(this.order, options)
     this.status = 'in-game'
     this.matchRecorded = false
   }

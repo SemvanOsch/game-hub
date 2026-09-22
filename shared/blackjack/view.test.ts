@@ -47,6 +47,7 @@ function player(
 function baseState(): BlackjackGameState {
   return {
     status: 'player_turns',
+    endMode: 'target',
     playerOrder: ['a', 'b'],
     players: {
       a: player('a', { status: 'playing', cards: [card('10', 'hearts'), card('Q', 'clubs')] }),

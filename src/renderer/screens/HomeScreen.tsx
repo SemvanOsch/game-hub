@@ -47,11 +47,13 @@ function GameCard({ game, onPlay }: { game: GameDefinition; onPlay: () => void }
           <h3>{game.name}</h3>
           {game.multiplayer ? (
             <span className={styles.badge}>
-              {game.minPlayers}–{game.maxPlayers} players
+              {game.minPlayers === game.maxPlayers
+                ? game.minPlayers
+                : `${game.minPlayers}–${game.maxPlayers}`}{' '}
+              players
             </span>
           ) : null}
         </div>
-        <p className={styles.desc}>{game.description}</p>
       </div>
       <div className={styles.cardFooter}>
         <Button onClick={onPlay} disabled={!game.available} fullWidth>

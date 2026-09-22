@@ -5,7 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 Game Hub — a desktop **multiplayer game launcher** (React + TypeScript + Electron) with an
-authoritative WebSocket server. Games: **Yahtzee** (2–6 players) and **Battleships** (1v1).
+authoritative WebSocket server. Games: **Yahtzee** (2–6), **Battleships** (1v1), **Blackjack**
+(2–6), **Rummikub** (2–4), **Connect 4** (1v1) and **Texas Hold'em** (2–8). All plug into one
+game-agnostic multiplayer core (see the architecture section) — the launcher shell, lobbies,
+networking and records don't know about any specific game.
 
 Optional **accounts** add friends, per-game win/loss records, and direct game invites. Login is
 optional — guests still play with just a display name; logging in unlocks the social features.
@@ -41,7 +44,10 @@ in-memory SQLite DB (`createDb(':memory:')`).
 - `shared/` — isomorphic domain logic, imported by both server and renderer. Keep it free of
   Node- and browser-specific imports.
 - `server/` — Node WebSocket server (`ws`). No game rules here.
-- `src/renderer/` — React app (Zustand for state, CSS Modules for styling).
+- `src/renderer/` — React app (Zustand for state, CSS Modules for styling). Card games
+  (Blackjack, Poker) share presentational primitives under `src/renderer/components/cards/` and
+  `.../chips/`; their domain-neutral counterparts (card/chip types, deck helpers) live in
+  `shared/blackjack/cards.ts` and `shared/chips/`. Reuse these rather than re-drawing cards/chips.
 - `electron/` — main + preload.
 
 Path aliases: `@shared/*` → `shared/*` (all projects), `@/*` → `src/renderer/*` (web only).
@@ -58,7 +64,9 @@ Understanding this is the key to being productive here.
   (parses untrusted client input), `applyAction` (authoritative reducer), `removePlayer`,
   `getPlayerView` (sanitizes state per player), `isFinished`, `getResults`, and `getWinnerIds`
   (player ids of the winner(s), handling ties — lets the server record match results with no
-  per-game branching).
+  per-game branching). `createGame(playerOrder, options?)` takes an optional, **opaque**
+  per-match settings blob chosen by the host in the lobby (sent on `start_game`); each engine
+  validates its own (e.g. Blackjack's `endMode: 'target' | 'survivor'`). The core never inspects it.
 - **`shared/games/registry.ts`** maps a game id → its engine. This is the single server dispatch
   point. Each game implements the engine in a `game.ts` adapter that wraps its pure rules
   (`shared/yahtzee/`, `shared/battleships/`).

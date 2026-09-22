@@ -28,6 +28,9 @@ export interface LeaveRoomMessage {
 }
 export interface StartGameMessage {
   type: 'start_game'
+  /** Optional, game-specific match settings chosen by the host in the lobby.
+   *  Opaque at the protocol level; the game's engine validates it. */
+  options?: unknown
 }
 /**
  * Generic in-game action. The `action` payload is opaque at the protocol level;

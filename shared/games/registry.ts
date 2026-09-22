@@ -12,6 +12,7 @@ import { blackjackEngine } from '../blackjack/game'
 import { rummikubEngine } from '../rummikub/game'
 import { connect4Engine } from '../connect4/game'
 import { pokerEngine } from '../poker/game'
+import { unoEngine } from '../uno/game'
 
 const ENGINES: Record<string, GameEngine> = {
   [yahtzeeEngine.id]: yahtzeeEngine,
@@ -19,7 +20,8 @@ const ENGINES: Record<string, GameEngine> = {
   [blackjackEngine.id]: blackjackEngine,
   [rummikubEngine.id]: rummikubEngine,
   [connect4Engine.id]: connect4Engine,
-  [pokerEngine.id]: pokerEngine
+  [pokerEngine.id]: pokerEngine,
+  [unoEngine.id]: unoEngine
 }
 
 export function getEngine(id: string): GameEngine | undefined {

@@ -21,7 +21,7 @@ interface MultiplayerState {
   host: (playerName: string, gameId: string) => Promise<void>
   join: (code: string, playerName: string) => Promise<void>
   leave: () => void
-  startGame: () => void
+  startGame: (options?: unknown) => void
   /** Send a game-specific action to the authoritative server. */
   sendAction: (action: unknown) => void
   returnToLobby: () => void
@@ -135,8 +135,8 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => {
       })
     },
 
-    startGame() {
-      sendMessage({ type: 'start_game' })
+    startGame(options?: unknown) {
+      sendMessage({ type: 'start_game', options })
     },
     sendAction(action) {
       sendMessage({ type: 'game_action', action })

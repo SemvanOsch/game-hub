@@ -1,0 +1,348 @@
+.screen {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-6) var(--space-7);
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+.leave {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+}
+.leave:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.rules {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* Opponents row */
+.opponents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: center;
+  margin-bottom: var(--space-4);
+}
+.seat {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  min-width: 140px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.seatTurn {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 18px rgba(0, 0, 0, 0.25);
+}
+.seatHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: 6px;
+}
+.seatName {
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+.offline {
+  color: var(--text-faint);
+  font-weight: 500;
+}
+.seatCount {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text);
+  background: var(--surface-3, rgba(255, 255, 255, 0.06));
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.seatCards {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+}
+.seatBack {
+  margin-right: -30px;
+}
+.seatBack:last-child {
+  margin-right: 0;
+}
+.empty {
+  color: var(--text-faint);
+}
+.seatFoot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: 6px;
+  min-height: 22px;
+}
+
+.unoTag {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+.unoSafe {
+  background: rgba(63, 163, 77, 0.2);
+  color: #63d67a;
+}
+.unoExposed {
+  background: rgba(226, 59, 63, 0.2);
+  color: #ff8087;
+}
+.catchBtn {
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  background: #e23b3f;
+  border: none;
+  border-radius: 999px;
+  padding: 2px 10px;
+  cursor: pointer;
+  animation: catch-pulse 1s ease-in-out infinite;
+}
+@keyframes catch-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+/* Table */
+.table {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  background:
+    radial-gradient(120% 140% at 50% -20%, rgba(255, 255, 255, 0.06), transparent 60%),
+    linear-gradient(160deg, #26313f, #171d27);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-4);
+}
+.pileGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.pileLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  font-weight: 700;
+}
+.drawPile {
+  position: relative;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.14s ease;
+}
+.drawPile:enabled:hover {
+  transform: translateY(-4px);
+}
+.drawPile:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+.pileCount {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 1px 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.discardPile {
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+}
+.centreInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+.colorDot {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.4);
+}
+.direction {
+  font-size: 28px;
+  line-height: 1;
+  color: var(--text-dim);
+}
+
+/* Banner */
+.banner {
+  text-align: center;
+  font-weight: 700;
+  font-size: 16px;
+  margin: var(--space-4) 0;
+  min-height: 24px;
+}
+
+/* Self */
+.self {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+.selfHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+.selfName {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 800;
+}
+.cardCount {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+.hand {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: var(--space-3) 0 var(--space-4);
+  min-height: 120px;
+}
+.handCard {
+  margin: 0 -14px;
+}
+.handCard:first-child {
+  margin-left: 0;
+}
+.handCard:last-child {
+  margin-right: 0;
+}
+
+.controls {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.unoArmed {
+  animation: catch-pulse 1s ease-in-out infinite;
+}
+
+/* Colour picker overlay */
+.pickerOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  animation: fade-in 0.15s ease;
+}
+.picker {
+  background: var(--surface-1, var(--surface-2));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  text-align: center;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+}
+.picker h3 {
+  margin: 0 0 var(--space-4);
+}
+.swatches {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+.swatch {
+  width: 108px;
+  height: 76px;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  border-radius: var(--radius-md);
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  transition: transform 0.12s ease;
+}
+.swatch:hover {
+  transform: scale(1.05);
+}
+.cancelPick {
+  margin-top: var(--space-4);
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-weight: 600;
+  cursor: pointer;
+}
+.cancelPick:hover {
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .table {
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-2);
+  }
+  .handCard {
+    margin: 0 -18px;
+  }
+}

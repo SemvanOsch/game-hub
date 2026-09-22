@@ -197,6 +197,58 @@
   white-space: nowrap;
 }
 
+/* Compact host-only match setting (e.g. Blackjack win condition). */
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  text-align: left;
+  padding: 10px 12px;
+  margin-bottom: var(--space-4);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.optionText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.optionLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.optionHint {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.segmented {
+  display: inline-flex;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.segmented button {
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.segmented button:hover {
+  color: var(--text);
+}
+.segActive {
+  color: var(--accent-contrast, #fff) !important;
+  background: var(--accent) !important;
+}
+
 .footer {
   text-align: center;
 }

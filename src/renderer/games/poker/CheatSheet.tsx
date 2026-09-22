@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import type { Card, Rank, Suit } from '@shared/blackjack/cards'
 import { PlayingCard } from '../../components/cards/PlayingCard'
 import styles from './CheatSheet.module.css'
@@ -84,20 +83,19 @@ const ENTRIES: CheatEntry[] = [
 ]
 
 /**
- * The permanent poker hand cheat sheet. On wide screens it sits beside the table
- * (see the layout CSS); on narrow screens it collapses to a toggle so it never
- * obscures play. Every example uses the real {@link PlayingCard} component — no
+ * The poker hand cheat sheet. It sits beside the table (see the layout CSS) and
+ * can be toggled open/closed on any screen size via the header button; the
+ * caller owns the open state so the layout can reclaim the space when it is
+ * collapsed. Every example uses the real {@link PlayingCard} component — no
  * unicode/emoji stand-ins.
  */
-export function CheatSheet() {
-  const [open, setOpen] = useState(false)
-
+export function CheatSheet({ open, onToggle }: { open: boolean; onToggle: () => void }) {
   return (
     <aside className={[styles.sheet, open ? styles.open : ''].filter(Boolean).join(' ')}>
       <button
         type="button"
         className={styles.toggle}
-        onClick={() => setOpen((v) => !v)}
+        onClick={onToggle}
         aria-expanded={open}
         aria-controls="poker-cheat-list"
       >
@@ -108,6 +106,7 @@ export function CheatSheet() {
       </button>
 
       <div className={styles.list} id="poker-cheat-list">
+
         <h2 className={styles.heading}>Poker Hands</h2>
         <p className={styles.sub}>Strongest to weakest</p>
         {ENTRIES.map((entry) => (

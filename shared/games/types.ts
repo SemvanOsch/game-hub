@@ -32,8 +32,12 @@ export interface GameEngine<S = unknown, V = unknown, A = unknown, R = unknown> 
   readonly minPlayers: number
   readonly maxPlayers: number
 
-  /** Build the initial authoritative state for an ordered list of player ids. */
-  createGame(playerOrder: string[]): S
+  /**
+   * Build the initial authoritative state for an ordered list of player ids.
+   * `options` carries optional, untrusted per-match settings chosen in the lobby
+   * (opaque at this level); each engine validates and interprets its own.
+   */
+  createGame(playerOrder: string[], options?: unknown): S
 
   /** Parse/validate an untrusted client action. Returns null if invalid. */
   validateAction(raw: unknown): A | null

@@ -16,6 +16,7 @@ import {
   canDoubleHand,
   canSplitHand,
   isNaturalBlackjack,
+  type BlackjackEndMode,
   type BlackjackGameState,
   type BlackjackHandStatus,
   type BlackjackPlayerStatus
@@ -64,6 +65,8 @@ export interface DealerView {
 
 export interface BlackjackView {
   status: BlackjackGameState['status']
+  /** The active win condition for this match, for display in the UI. */
+  endMode: BlackjackEndMode
   selfId: string
   handNumber: number
   currentPlayerId?: string
@@ -106,6 +109,7 @@ export function getPlayerView(state: BlackjackGameState, playerId: string): Blac
 
   return {
     status: state.status,
+    endMode: state.endMode,
     selfId: playerId,
     handNumber: state.handNumber,
     currentPlayerId: state.currentPlayerId,

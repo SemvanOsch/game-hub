@@ -60,6 +60,10 @@
   gap: var(--space-5);
   align-items: start;
 }
+/* When the cheat sheet is collapsed, let its column shrink to just the toggle. */
+.layoutCollapsed {
+  grid-template-columns: auto minmax(0, 1fr);
+}
 .main {
   min-width: 0;
 }
@@ -389,6 +393,8 @@
   border-radius: var(--radius);
   background: var(--surface-2);
   border: 1px solid var(--border);
+  max-height: 168px;
+  overflow-y: auto;
 }
 .logLine {
   font-size: 12px;

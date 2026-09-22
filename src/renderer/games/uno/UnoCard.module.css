@@ -1,0 +1,224 @@
+/* Designed UNO card. Cards carry their own vivid colour identity so they read
+ * clearly on the dark table in every app theme. */
+.card {
+  --uno-w: 72px;
+  --uno-radius: calc(var(--uno-w) * 0.14);
+  width: var(--uno-w);
+  aspect-ratio: 5 / 7.4;
+  border-radius: var(--uno-radius);
+  position: relative;
+  flex: 0 0 auto;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.15) inset;
+  user-select: none;
+  padding: 0;
+  border: none;
+}
+
+.sm {
+  --uno-w: 46px;
+}
+.md {
+  --uno-w: 72px;
+}
+.lg {
+  --uno-w: 104px;
+}
+
+/* Colour bodies. */
+.red {
+  --uno-body: #e23b3f;
+  --uno-body-dark: #b3282c;
+}
+.yellow {
+  --uno-body: #f5b514;
+  --uno-body-dark: #cf9308;
+}
+.green {
+  --uno-body: #3fa34d;
+  --uno-body-dark: #2c7d38;
+}
+.blue {
+  --uno-body: #2c7fe0;
+  --uno-body-dark: #1c5cb0;
+}
+.wild {
+  --uno-body: #1f2430;
+  --uno-body-dark: #11141c;
+}
+
+.face {
+  background: linear-gradient(160deg, var(--uno-body), var(--uno-body-dark));
+  color: #ffffff;
+  display: block;
+}
+
+/* White tilted oval behind the centre symbol (classic UNO look). */
+.oval {
+  position: absolute;
+  inset: 12% 8%;
+  background: #f7f7f4;
+  border-radius: 50%;
+  transform: rotate(-38deg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15) inset;
+}
+
+.centre {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+/* Big number/symbol, coloured to the card body, with a crisp white edge so it
+ * pops against the oval. */
+.bigNum {
+  font-size: calc(var(--uno-w) * 0.62);
+  font-weight: 900;
+  line-height: 1;
+  color: var(--uno-body);
+  -webkit-text-stroke: calc(var(--uno-w) * 0.02) rgba(0, 0, 0, 0.12);
+  letter-spacing: -0.04em;
+  transform: rotate(-8deg);
+}
+
+.glyphSvg {
+  width: calc(var(--uno-w) * 0.6);
+  height: calc(var(--uno-w) * 0.6);
+  color: var(--uno-body);
+  transform: rotate(-8deg);
+}
+
+/* Corner indices. */
+.corner {
+  position: absolute;
+  font-size: calc(var(--uno-w) * 0.24);
+  font-weight: 800;
+  line-height: 1;
+  z-index: 2;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+}
+.cornerGlyph {
+  font-size: calc(var(--uno-w) * 0.26);
+}
+.tl {
+  top: calc(var(--uno-w) * 0.08);
+  left: calc(var(--uno-w) * 0.1);
+}
+.br {
+  bottom: calc(var(--uno-w) * 0.08);
+  right: calc(var(--uno-w) * 0.1);
+  transform: rotate(180deg);
+}
+
+/* Wild four-colour pie for the centre. */
+.wildPie {
+  position: relative;
+  width: calc(var(--uno-w) * 0.66);
+  height: calc(var(--uno-w) * 0.66);
+  border-radius: 50%;
+  overflow: hidden;
+  transform: rotate(-8deg);
+  box-shadow: 0 0 0 calc(var(--uno-w) * 0.03) #f7f7f4, 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.wildQuad {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+}
+.qRed {
+  top: 0;
+  left: 0;
+  background: #e23b3f;
+}
+.qBlue {
+  top: 0;
+  right: 0;
+  background: #2c7fe0;
+}
+.qYellow {
+  bottom: 0;
+  left: 0;
+  background: #f5b514;
+}
+.qGreen {
+  bottom: 0;
+  right: 0;
+  background: #3fa34d;
+}
+.wildLabel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--uno-w) * 0.34);
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+/* Patterned back for the draw pile / opponents. */
+.back {
+  background: linear-gradient(150deg, #1f2430, #11141c);
+}
+.back::after {
+  content: 'UNO';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: calc(var(--uno-w) * 0.26);
+  letter-spacing: -0.04em;
+  color: #e23b3f;
+  transform: rotate(-20deg);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.9);
+}
+
+/* Interaction states. */
+.interactive {
+  cursor: pointer;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+.playable {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: -1px;
+}
+.interactive.playable:hover {
+  transform: translateY(-14px);
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.5);
+  z-index: 5;
+}
+.disabled {
+  filter: brightness(0.6) saturate(0.7);
+  cursor: default;
+}
+
+.dealIn {
+  animation: uno-deal 0.42s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+}
+@keyframes uno-deal {
+  from {
+    opacity: 0;
+    transform: translateY(-26px) rotate(-8deg) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dealIn {
+    animation: none;
+  }
+  .interactive.playable:hover {
+    transform: none;
+  }
+}

@@ -80,7 +80,10 @@ export function BlackjackGame({ room, view, sendAction, onLeave }: GameUIProps) 
         <div className={styles.handInfo}>
           <span className={styles.handNo}>Hand {state.handNumber}</span>
           <span className={styles.dealerRule}>
-            Dealer stands on soft 17 · Blackjack pays 3:2 · First to 1,000 chips wins
+            Dealer stands on soft 17 · Blackjack pays 3:2 ·{' '}
+            {state.endMode === 'survivor'
+              ? 'Last player with chips wins'
+              : 'First to 1,000 chips wins'}
           </span>
         </div>
       </div>

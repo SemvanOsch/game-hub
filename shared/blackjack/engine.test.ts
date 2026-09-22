@@ -85,6 +85,7 @@ function state(over: Partial<BlackjackGameState> & {
 }): BlackjackGameState {
   return {
     status: 'player_turns',
+    endMode: 'target',
     deck: [],
     dealerCards: [card('10', 'hearts'), card('8', 'clubs')], // 18, dealer stands
     dealerRevealed: false,
@@ -543,6 +544,25 @@ describe('elimination and match winner', () => {
     expect(s.players.a.chips).toBe(chips(1100))
     expect(s.status).toBe('match_over')
     expect(s.winnerId).toBe('a')
+  })
+
+  it('ignores the chip target in survivor mode (plays on until one remains)', () => {
+    let s = state({
+      endMode: 'survivor',
+      players: {
+        // Same setup as the target-win test: a would cross 1000, but in survivor
+        // mode the target is ignored, so the hand simply ends and play continues.
+        a: player('a', { cards: [card('10'), card('Q')], status: 'playing', chips: chips(900) }),
+        b: player('b', { cards: [card('9'), card('7')], status: 'waiting', chips: chips(400) })
+      },
+      playerOrder: ['a', 'b'],
+      currentPlayerId: 'a'
+    })
+    s = unwrap(stand(s, 'a'))
+    s = unwrap(stand(s, 'b'))
+    expect(s.players.a.chips).toBe(chips(1100))
+    expect(s.status).toBe('hand_over')
+    expect(s.winnerId).toBeUndefined()
   })
 
   it('awards a target win to the richest player when several cross at once', () => {

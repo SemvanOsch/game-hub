@@ -18,6 +18,8 @@ import { Connect4Game } from './connect4/Connect4Game'
 import { Connect4Result } from './connect4/Connect4Result'
 import { PokerGame } from './poker/PokerGame'
 import { PokerResult } from './poker/PokerResult'
+import { UnoGame } from './uno/UnoGame'
+import { UnoResult } from './uno/UnoResult'
 
 /** Props passed to a game's in-progress screen. */
 export interface GameUIProps {
@@ -52,7 +54,8 @@ const GAME_UI: Record<string, GameUI> = {
   blackjack: { Game: BlackjackGame, GameOver: BlackjackResult },
   rummikub: { Game: RummikubGame, GameOver: RummikubResult },
   connect4: { Game: Connect4Game, GameOver: Connect4Result },
-  poker: { Game: PokerGame, GameOver: PokerResult }
+  poker: { Game: PokerGame, GameOver: PokerResult },
+  uno: { Game: UnoGame, GameOver: UnoResult }
 }
 
 export function getGameUI(gameId: string): GameUI | undefined {

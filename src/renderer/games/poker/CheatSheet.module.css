@@ -7,9 +7,8 @@
   overflow: hidden;
 }
 
-/* The toggle is only used on narrow layouts; hidden on wide screens. */
 .toggle {
-  display: none;
+  display: flex;
   width: 100%;
   align-items: center;
   justify-content: space-between;
@@ -28,9 +27,13 @@
 }
 
 .list {
+  display: none;
   max-height: calc(100vh - 120px);
   overflow-y: auto;
   padding: var(--space-3);
+}
+.open .list {
+  display: block;
 }
 .heading {
   margin: 0;
@@ -97,14 +100,7 @@
   .sheet {
     position: static;
   }
-  .toggle {
-    display: flex;
-  }
   .list {
-    display: none;
     max-height: 60vh;
-  }
-  .open .list {
-    display: block;
   }
 }

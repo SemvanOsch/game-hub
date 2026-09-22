@@ -99,7 +99,7 @@ export class GameServer {
       case 'leave_room':
         return this.onLeaveRoom(client)
       case 'start_game':
-        return this.onStartGame(client)
+        return this.onStartGame(client, msg.options)
       case 'game_action':
         return this.onGameAction(client, msg.action)
       case 'return_to_lobby':
@@ -212,7 +212,7 @@ export class GameServer {
     }
   }
 
-  private onStartGame(client: ClientState): void {
+  private onStartGame(client: ClientState, options?: unknown): void {
     const room = this.getRoom(client)
     if (!room || !client.playerId) {
       return this.sendError(client.socket, 'NOT_IN_ROOM', 'You are not in a room.')
@@ -234,7 +234,7 @@ export class GameServer {
         `${room.minPlayers} players are required to start.`
       )
     }
-    room.startGame()
+    room.startGame(options)
     this.broadcastState(room)
   }
 

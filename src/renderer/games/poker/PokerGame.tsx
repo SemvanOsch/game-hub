@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type {
   LegalActions,
   PokerPlayerView,
@@ -85,6 +85,8 @@ export function PokerGame({ room, view, sendAction, onLeave }: GameUIProps) {
     [room.players]
   )
 
+  const [cheatSheetOpen, setCheatSheetOpen] = useState(true)
+
   const self = state.players.find((p) => p.isSelf)
   // Reorder so the local player sits at the bottom, others fan out clockwise.
   const selfIndex = state.players.findIndex((p) => p.isSelf)
@@ -130,8 +132,8 @@ export function PokerGame({ room, view, sendAction, onLeave }: GameUIProps) {
         </div>
       </div>
 
-      <div className={styles.layout}>
-        <CheatSheet />
+      <div className={[styles.layout, cheatSheetOpen ? '' : styles.layoutCollapsed].filter(Boolean).join(' ')}>
+        <CheatSheet open={cheatSheetOpen} onToggle={() => setCheatSheetOpen((v) => !v)} />
 
         <div className={styles.main}>
           <div className={styles.tableWrap}>
@@ -466,7 +468,7 @@ function ActionControls({
   )
 }
 
-/** Compact scrolling action history. */
+/** Scrollable action history; auto-sticks to the newest line at the bottom. */
 function ActionLog({
   entries,
   nameOf
@@ -474,11 +476,20 @@ function ActionLog({
   entries: PokerActionLogEntry[]
   nameOf: (id: string) => string
 }) {
-  // Show the most recent entries, newest at the bottom.
-  const recent = entries.slice(-6)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Keep the newest entry (at the bottom) in view as the log grows, unless the
+  // player has scrolled up to read further back.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40
+    if (nearBottom) el.scrollTop = el.scrollHeight
+  }, [entries.length])
+
   return (
-    <div className={styles.log} aria-label="Action history">
-      {recent.map((entry) => (
+    <div ref={scrollRef} className={styles.log} aria-label="Action history">
+      {entries.map((entry) => (
         <div key={entry.seq} className={styles.logLine}>
           {logText(entry, nameOf)}
         </div>

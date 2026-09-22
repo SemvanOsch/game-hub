@@ -8,12 +8,16 @@ interface LobbyScreenProps {
   room: RoomState
   selfId: string
   isHost: boolean
-  onStart: () => void
+  onStart: (options?: unknown) => void
   onLeave: () => void
 }
 
 export function LobbyScreen({ room, selfId, isHost, onStart, onLeave }: LobbyScreenProps) {
   const [copied, setCopied] = useState(false)
+  // Blackjack lets the host choose the win condition (default: first to 1,000 chips).
+  const [endAtTarget, setEndAtTarget] = useState(true)
+  // UNO lets the host toggle Draw Two / Wild Draw Four stacking (default: off).
+  const [unoStacking, setUnoStacking] = useState(false)
   const session = useAuthStore((s) => s.session)
   const friends = useAuthStore((s) => s.friends)
   const inviteToRoom = useAuthStore((s) => s.inviteToRoom)
@@ -24,6 +28,18 @@ export function LobbyScreen({ room, selfId, isHost, onStart, onLeave }: LobbyScr
   const presentNames = new Set(room.players.map((p) => p.name))
   const invitableFriends = friends.filter((f) => f.online && !presentNames.has(f.username))
   const canInvite = Boolean(session) && room.players.length < room.maxPlayers
+
+  const showBlackjackRule = room.gameId === 'blackjack' && isHost
+  const showUnoRule = room.gameId === 'uno' && isHost
+  const start = () => {
+    const options =
+      room.gameId === 'blackjack'
+        ? { endMode: endAtTarget ? 'target' : 'survivor' }
+        : room.gameId === 'uno'
+          ? { stacking: unoStacking }
+          : undefined
+    onStart(options)
+  }
 
   const invite = (userId: string) => {
     inviteToRoom(userId)
@@ -109,10 +125,70 @@ export function LobbyScreen({ room, selfId, isHost, onStart, onLeave }: LobbyScr
           </div>
         ) : null}
 
+        {showBlackjackRule ? (
+          <div className={styles.option}>
+            <div className={styles.optionText}>
+              <span className={styles.optionLabel}>Win condition</span>
+              <span className={styles.optionHint}>
+                {endAtTarget ? 'First to 1,000 chips wins' : 'Last player with chips wins'}
+              </span>
+            </div>
+            <div className={styles.segmented} role="group" aria-label="Win condition">
+              <button
+                type="button"
+                className={endAtTarget ? styles.segActive : ''}
+                aria-pressed={endAtTarget}
+                onClick={() => setEndAtTarget(true)}
+              >
+                1,000 chips
+              </button>
+              <button
+                type="button"
+                className={!endAtTarget ? styles.segActive : ''}
+                aria-pressed={!endAtTarget}
+                onClick={() => setEndAtTarget(false)}
+              >
+                Last standing
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {showUnoRule ? (
+          <div className={styles.option}>
+            <div className={styles.optionText}>
+              <span className={styles.optionLabel}>Stacking</span>
+              <span className={styles.optionHint}>
+                {unoStacking
+                  ? 'Draw Two / Wild Draw Four can be stacked'
+                  : 'Penalties are drawn immediately'}
+              </span>
+            </div>
+            <div className={styles.segmented} role="group" aria-label="Stacking">
+              <button
+                type="button"
+                className={!unoStacking ? styles.segActive : ''}
+                aria-pressed={!unoStacking}
+                onClick={() => setUnoStacking(false)}
+              >
+                Off
+              </button>
+              <button
+                type="button"
+                className={unoStacking ? styles.segActive : ''}
+                aria-pressed={unoStacking}
+                onClick={() => setUnoStacking(true)}
+              >
+                On
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         <div className={styles.footer}>
           {isHost ? (
             <>
-              <Button size="lg" fullWidth onClick={onStart} disabled={!enoughPlayers}>
+              <Button size="lg" fullWidth onClick={start} disabled={!enoughPlayers}>
                 Start Game
               </Button>
               {!enoughPlayers ? (

@@ -39,6 +39,29 @@ import {
   type HandOutcome
 } from './rules'
 
+/**
+ * How the match ends:
+ * - `target`   — first player to reach the chip target ({@link WIN_TARGET_UNITS})
+ *                wins outright, or the last player standing wins (default).
+ * - `survivor` — the chip target is ignored; the match runs until only one
+ *                player has chips left (last player standing).
+ */
+export type BlackjackEndMode = 'target' | 'survivor'
+
+/** Per-match options chosen in the lobby before the game is created. */
+export interface BlackjackGameOptions {
+  endMode?: BlackjackEndMode
+}
+
+/** Narrow untrusted lobby options to a concrete end mode, defaulting to `target`. */
+export function parseBlackjackOptions(raw: unknown): BlackjackEndMode {
+  if (raw && typeof raw === 'object') {
+    const mode = (raw as Record<string, unknown>).endMode
+    if (mode === 'survivor') return 'survivor'
+  }
+  return 'target'
+}
+
 /** The lifecycle of a single hand within a round. `blackjack` marks a NATURAL. */
 export type BlackjackHandStatus = 'playing' | 'standing' | 'busted' | 'blackjack'
 
@@ -101,6 +124,8 @@ export type BlackjackPhase =
 /** Authoritative server state. Contains hidden information (deck + hole card). */
 export interface BlackjackGameState {
   status: BlackjackPhase
+  /** Chosen win condition for this match (see {@link BlackjackEndMode}). */
+  endMode: BlackjackEndMode
   playerOrder: string[]
   players: Record<string, BlackjackServerPlayer>
   /** Undrawn cards, top of deck at the END of the array (pop to draw). */
@@ -223,7 +248,7 @@ function isActive(p: BlackjackServerPlayer): boolean {
  * Create a new match: every player starts with 500 chips (in units), then the
  * first hand is dealt immediately so clients open straight into play.
  */
-export function createGame(playerOrder: string[]): BlackjackGameState {
+export function createGame(playerOrder: string[], options?: unknown): BlackjackGameState {
   const players: Record<string, BlackjackServerPlayer> = {}
   for (const id of playerOrder) {
     players[id] = {
@@ -236,6 +261,7 @@ export function createGame(playerOrder: string[]): BlackjackGameState {
   }
   const state: BlackjackGameState = {
     status: 'player_turns',
+    endMode: parseBlackjackOptions(options),
     playerOrder: [...playerOrder],
     players,
     deck: shuffle(createDeck()),
@@ -420,11 +446,14 @@ function settle(state: BlackjackGameState): BlackjackGameState {
 
   // The match ends when someone reaches the chip target, or only one player is
   // left standing. On a target win, the player with the most chips takes it
-  // (ties broken by seat order, matching playerOrder iteration).
+  // (ties broken by seat order, matching playerOrder iteration). In `survivor`
+  // mode the chip target is ignored — play continues until one player remains.
   let targetWinner: BlackjackServerPlayer | undefined
-  for (const p of remaining) {
-    if (p.chips >= WIN_TARGET_UNITS && (!targetWinner || p.chips > targetWinner.chips)) {
-      targetWinner = p
+  if (state.endMode === 'target') {
+    for (const p of remaining) {
+      if (p.chips >= WIN_TARGET_UNITS && (!targetWinner || p.chips > targetWinner.chips)) {
+        targetWinner = p
+      }
     }
   }
 
