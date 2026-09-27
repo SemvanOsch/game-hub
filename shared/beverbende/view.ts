@@ -68,6 +68,12 @@ export interface BeverbendeView {
   roundScores?: Record<string, number>
   winnerIds?: string[]
   lastEvent?: string
+  /** Player id the last event is attributed to (the actor may no longer be the
+   *  current player after their turn ends). */
+  lastActorId?: string
+  /** The two slots exchanged by the most recent swap (positions only, no identities),
+   *  for a client cross-table animation. Present only on the swap's own view. */
+  lastSwap?: { aId: string; aPos: number; bId: string; bPos: number }
 }
 
 export interface BeverbendeResults {
@@ -162,7 +168,9 @@ export function getPlayerView(state: BeverbendeState, playerId: string): Beverbe
     serverNow: Date.now(),
     roundScores: state.roundScores,
     winnerIds: state.winnerIds,
-    lastEvent: state.lastEvent
+    lastEvent: state.lastEvent,
+    lastActorId: state.lastActorId,
+    lastSwap: state.lastSwap
   }
 }
 

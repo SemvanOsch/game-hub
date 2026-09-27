@@ -128,6 +128,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  perspective: 600px;
 }
 .pileHot {
   cursor: pointer;
@@ -271,6 +272,14 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
+}
+/* Tight wrapper around just the card (not its position label) — the element the
+   swap animation moves. */
+.cardHolder {
+  display: flex;
+}
+.oppCardHolder {
+  display: inline-flex;
 }
 .hiddenCard {
   background: none;
@@ -421,5 +430,106 @@
   }
   .selfCards {
     gap: var(--space-2);
+  }
+}
+
+/* --- Move animations ------------------------------------------------------ */
+
+/* Event toast: slides in and gently settles on each new move. */
+.toastRow {
+  display: flex;
+  justify-content: center;
+  min-height: 0;
+}
+.toast {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  padding: 5px 14px;
+  font-size: 0.85rem;
+  color: var(--text);
+  box-shadow: var(--shadow);
+  animation: toastIn 0.34s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+.toastActor {
+  font-weight: 800;
+  color: var(--accent);
+}
+.toastText {
+  color: var(--text-dim);
+}
+@keyframes toastIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Discard pile: the new top card flips/pops into place. */
+.discardIn {
+  animation: discardPop 0.36s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+@keyframes discardPop {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) rotateY(70deg) scale(0.9);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) rotateY(0) scale(1.06);
+  }
+  100% {
+    transform: translateY(0) rotateY(0) scale(1);
+  }
+}
+
+/* Drawn-card panel slides up from the piles. */
+.pendingIn {
+  animation: pendingIn 0.3s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+@keyframes pendingIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Own card slot: a quick highlight when a card moves into/out of it. */
+.slotFlash {
+  animation: slotFlash 0.75s ease-out;
+  border-radius: 14px;
+}
+@keyframes slotFlash {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent);
+    transform: translateY(0);
+  }
+  30% {
+    box-shadow: 0 0 0 3px var(--accent), 0 0 22px var(--glow);
+    transform: translateY(-6px);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .discardIn,
+  .pendingIn,
+  .slotFlash {
+    animation: none;
   }
 }

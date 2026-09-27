@@ -86,15 +86,91 @@ export function BeverbendeGame({ room, view, selfId, sendAction, onLeave }: Game
   const peekShowing =
     state.status === 'playing' && peekReveal !== null && !!self?.cards[peekReveal]?.known
 
+  // --- move animations -----------------------------------------------------
+  const reducedMotion = () =>
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
+
+  // Draw pile "lift" whenever a card leaves it.
+  const drawPileRef = useRef<HTMLButtonElement>(null)
+  const prevDrawCount = useRef(state.drawPileCount)
+  useEffect(() => {
+    const el = drawPileRef.current
+    if (el && state.drawPileCount < prevDrawCount.current && !reducedMotion()) {
+      el.animate(
+        [
+          { transform: 'translateY(0) scale(1)' },
+          { transform: 'translateY(-10px) scale(1.06)' },
+          { transform: 'translateY(0) scale(1)' }
+        ],
+        { duration: 320, easing: 'ease-out' }
+      )
+    }
+    prevDrawCount.current = state.drawPileCount
+  }, [state.drawPileCount])
+
+  // Flash the local player's own card slot that they just acted on.
+  const [flashSlot, setFlashSlot] = useState<number | null>(null)
+  const pendingFlashSlot = useRef<number | null>(null)
+  useEffect(() => {
+    if (pendingFlashSlot.current === null) return
+    setFlashSlot(pendingFlashSlot.current)
+    pendingFlashSlot.current = null
+    const t = window.setTimeout(() => setFlashSlot(null), 750)
+    return () => window.clearTimeout(t)
+    // Re-run when a new server view arrives (the move has been applied).
+  }, [view])
+
+  // A DOM element per card slot ("<playerId>:<position>"), for the swap animation.
+  const cardRefs = useRef(new Map<string, HTMLElement>())
+  const registerCard = (playerId: string, position: number, el: HTMLElement | null) => {
+    const key = `${playerId}:${position}`
+    if (el) cardRefs.current.set(key, el)
+    else cardRefs.current.delete(key)
+  }
+  // When a swap happens, fly the two exchanged cards across the table from each
+  // other's old spot into place, so it is clear which two cards were swapped.
+  useEffect(() => {
+    const sw = state.lastSwap
+    if (!sw || reducedMotion()) return
+    const a = cardRefs.current.get(`${sw.aId}:${sw.aPos}`)
+    const b = cardRefs.current.get(`${sw.bId}:${sw.bPos}`)
+    if (!a || !b) return
+    const ra = a.getBoundingClientRect()
+    const rb = b.getBoundingClientRect()
+    const dx = rb.left + rb.width / 2 - (ra.left + ra.width / 2)
+    const dy = rb.top + rb.height / 2 - (ra.top + ra.height / 2)
+    // Each card now sits where the OTHER card used to be, so it flies in from there.
+    const fly = (el: HTMLElement, fromX: number, fromY: number) => {
+      el.style.zIndex = '40'
+      el.style.position = 'relative'
+      const anim = el.animate(
+        [
+          { transform: `translate(${fromX}px, ${fromY}px) scale(1.12)`, boxShadow: '0 10px 26px rgba(0,0,0,0.55)' },
+          { transform: 'translate(0, 0) scale(1)', boxShadow: '0 0 0 rgba(0,0,0,0)' }
+        ],
+        { duration: 620, easing: 'cubic-bezier(0.2, 0.8, 0.25, 1)' }
+      )
+      anim.onfinish = () => {
+        el.style.zIndex = ''
+        el.style.position = ''
+      }
+    }
+    fly(a, dx, dy)
+    fly(b, -dx, -dy)
+  }, [view])
+
   // --- action senders ------------------------------------------------------
   const send = sendAction
   const clickOwnCard = (position: number) => {
     if (!state.yourTurn) return
     switch (mode) {
       case 'takeDiscard':
+        pendingFlashSlot.current = position
         send({ type: 'takeDiscard', position })
         break
       case 'replace':
+        pendingFlashSlot.current = position
         send({ type: 'replace', position })
         break
       case 'peek':
@@ -116,6 +192,7 @@ export function BeverbendeGame({ room, view, selfId, sendAction, onLeave }: Game
   }
   const clickOpponentCard = (targetId: string, targetPosition: number) => {
     if (!state.yourTurn || mode !== 'swapTarget' || swapOwnPos === null) return
+    pendingFlashSlot.current = swapOwnPos // flash the card you swapped away
     send({ type: 'swap', ownPosition: swapOwnPos, targetId, targetPosition })
   }
 
@@ -150,6 +227,7 @@ export function BeverbendeGame({ room, view, selfId, sendAction, onLeave }: Game
             knocked={state.roundEndingPlayerId === p.playerId}
             swapTargetMode={mode === 'swapTarget'}
             onCardClick={(pos) => clickOpponentCard(p.playerId, pos)}
+            registerCard={registerCard}
           />
         ))}
       </div>
@@ -158,6 +236,7 @@ export function BeverbendeGame({ room, view, selfId, sendAction, onLeave }: Game
       <div className={styles.tableWrap}>
         <div className={styles.pileArea}>
           <button
+            ref={drawPileRef}
             className={[styles.pile, state.yourTurn && !state.pending ? styles.pileHot : '']
               .filter(Boolean)
               .join(' ')}
@@ -187,7 +266,12 @@ export function BeverbendeGame({ room, view, selfId, sendAction, onLeave }: Game
             }
           >
             {state.discardTop ? (
-              <BeverbendeCard card={state.discardTop} size="md" />
+              <BeverbendeCard
+                key={state.discardTop.id}
+                card={state.discardTop}
+                size="md"
+                className={styles.discardIn}
+              />
             ) : (
               <div className={styles.pileEmpty}>—</div>
             )}
@@ -197,17 +281,24 @@ export function BeverbendeGame({ room, view, selfId, sendAction, onLeave }: Game
         </div>
       </div>
 
+      {/* Animated event toast — re-plays its slide-in on every new move. */}
+      {state.lastEvent ? (
+        <div className={styles.toastRow}>
+          <div key={state.serverNow} className={styles.toast}>
+            {state.lastActorId ? (
+              <span className={styles.toastActor}>{nameOf(state.lastActorId)}</span>
+            ) : null}
+            <span className={styles.toastText}>{state.lastEvent}</span>
+          </div>
+        </div>
+      ) : null}
+
       {/* Status banner */}
       <div className={styles.banner} role="status" aria-live="polite">
         <span className={styles.bannerMsg}>{statusMessage(state, mode, nameOf, swapOwnPos)}</span>
         {state.roundEndingPlayerId ? (
           <span className={styles.finalTag}>
             Last round · {nameOf(state.roundEndingPlayerId)} knocked
-          </span>
-        ) : null}
-        {state.lastEvent && state.currentPlayerId ? (
-          <span className={styles.lastEvent}>
-            {nameOf(state.currentPlayerId)} {state.lastEvent}
           </span>
         ) : null}
         {state.status === 'playing' ? (
@@ -220,6 +311,7 @@ export function BeverbendeGame({ room, view, selfId, sendAction, onLeave }: Game
       {/* Pending drawn card / action prompt */}
       {pending ? (
         <PendingPanel
+          key={pending.kind === 'decide' ? pending.card.id : pending.kind}
           pending={pending}
           onReplace={() => setMode('replace')}
           onDiscard={() => send({ type: 'discardDrawn' })}
@@ -252,9 +344,11 @@ export function BeverbendeGame({ room, view, selfId, sendAction, onLeave }: Game
                 slot={slot}
                 position={i}
                 faceUp={showSelfFace(slot, i)}
+                flash={flashSlot === i}
                 interactive={selfCardInteractive(mode)}
                 selected={mode === 'swapTarget' && swapOwnPos === i}
                 onClick={() => clickOwnCard(i)}
+                refCb={(el) => registerCard(selfId, i, el)}
               />
             ))}
           </div>
@@ -380,7 +474,7 @@ function PendingPanel({
 }) {
   if (pending.kind !== 'decide') {
     return (
-      <div className={styles.pendingPanel}>
+      <div className={[styles.pendingPanel, styles.pendingIn].join(' ')}>
         <span className={styles.pendingHint}>
           {pending.kind === 'peek'
             ? 'Choose one of your cards to peek at.'
@@ -390,7 +484,7 @@ function PendingPanel({
     )
   }
   return (
-    <div className={styles.pendingPanel}>
+    <div className={[styles.pendingPanel, styles.pendingIn].join(' ')}>
       <div className={styles.pendingCardWrap}>
         <span className={styles.pendingLabel}>
           {pending.drawTwoStage === 2 ? 'Second card (must resolve)' : 'You drew'}
@@ -421,47 +515,55 @@ function SelfCard({
   slot,
   position,
   faceUp,
+  flash,
   interactive,
   selected,
-  onClick
+  onClick,
+  refCb
 }: {
   slot: CardSlot
   position: number
   /** Whether to render the card's face right now (reveal window, flash, scoring). */
   faceUp: boolean
+  /** Briefly highlight this slot (a card just moved into/out of it). */
+  flash: boolean
   interactive: boolean
   selected: boolean
   onClick: () => void
+  /** Registers the card element for the cross-table swap animation. */
+  refCb?: (el: HTMLElement | null) => void
 }) {
   // Show the face only during a reveal/flash; otherwise a face-down card that still
   // marks whether the player has learned it (a memory aid without leaking the value).
   const showFace = faceUp && !!slot.card
   return (
-    <div className={styles.selfCardCell}>
-      {showFace ? (
-        <BeverbendeCard
-          card={slot.card!}
-          size="lg"
-          selected={selected}
-          playable={interactive}
-          onClick={interactive ? onClick : undefined}
-        />
-      ) : interactive ? (
-        <button
-          className={[styles.hiddenCard, selected ? styles.hiddenSel : '', slot.known ? styles.knownCard : '']
-            .filter(Boolean)
-            .join(' ')}
-          onClick={onClick}
-        >
-          <BeverbendeCard back size="lg" />
-          {slot.known ? <span className={styles.knownDot} aria-label="You know this card" /> : null}
-        </button>
-      ) : (
-        <div className={[styles.hiddenCard, slot.known ? styles.knownCard : ''].filter(Boolean).join(' ')}>
-          <BeverbendeCard back size="lg" />
-          {slot.known ? <span className={styles.knownDot} aria-label="You know this card" /> : null}
-        </div>
-      )}
+    <div className={[styles.selfCardCell, flash ? styles.slotFlash : ''].filter(Boolean).join(' ')}>
+      <div className={styles.cardHolder} ref={refCb}>
+        {showFace ? (
+          <BeverbendeCard
+            card={slot.card!}
+            size="lg"
+            selected={selected}
+            playable={interactive}
+            onClick={interactive ? onClick : undefined}
+          />
+        ) : interactive ? (
+          <button
+            className={[styles.hiddenCard, selected ? styles.hiddenSel : '', slot.known ? styles.knownCard : '']
+              .filter(Boolean)
+              .join(' ')}
+            onClick={onClick}
+          >
+            <BeverbendeCard back size="lg" />
+            {slot.known ? <span className={styles.knownDot} aria-label="You know this card" /> : null}
+          </button>
+        ) : (
+          <div className={[styles.hiddenCard, slot.known ? styles.knownCard : ''].filter(Boolean).join(' ')}>
+            <BeverbendeCard back size="lg" />
+            {slot.known ? <span className={styles.knownDot} aria-label="You know this card" /> : null}
+          </div>
+        )}
+      </div>
       <span className={styles.posLabel}>{position + 1}</span>
     </div>
   )
@@ -476,7 +578,8 @@ function OpponentSeat({
   connected,
   knocked,
   swapTargetMode,
-  onCardClick
+  onCardClick,
+  registerCard
 }: {
   player: BeverbendePlayerView
   name: string
@@ -485,6 +588,7 @@ function OpponentSeat({
   knocked: boolean
   swapTargetMode: boolean
   onCardClick: (position: number) => void
+  registerCard: (playerId: string, position: number, el: HTMLElement | null) => void
 }) {
   return (
     <div className={[styles.seat, isTurn ? styles.seatTurn : ''].filter(Boolean).join(' ')}>
@@ -498,17 +602,23 @@ function OpponentSeat({
         {knocked ? <span className={styles.seatKnock}>Knocked</span> : null}
       </div>
       <div className={styles.seatCards}>
-        {player.cards.map((slot, i) =>
-          slot.card ? (
-            <BeverbendeCard key={i} card={slot.card} size="sm" />
-          ) : swapTargetMode ? (
-            <button key={i} className={styles.seatCardBtn} onClick={() => onCardClick(i)} title="Swap with this card">
+        {player.cards.map((slot, i) => (
+          <span
+            key={i}
+            className={styles.oppCardHolder}
+            ref={(el) => registerCard(player.playerId, i, el)}
+          >
+            {slot.card ? (
+              <BeverbendeCard card={slot.card} size="sm" />
+            ) : swapTargetMode ? (
+              <button className={styles.seatCardBtn} onClick={() => onCardClick(i)} title="Swap with this card">
+                <BeverbendeCard back size="sm" />
+              </button>
+            ) : (
               <BeverbendeCard back size="sm" />
-            </button>
-          ) : (
-            <BeverbendeCard key={i} back size="sm" />
-          )
-        )}
+            )}
+          </span>
+        ))}
       </div>
     </div>
   )

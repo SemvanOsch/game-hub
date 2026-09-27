@@ -104,6 +104,14 @@ export interface BeverbendeState {
   winnerIds?: string[]
   /** Short human-readable summary of the last event, for client messaging. */
   lastEvent?: string
+  /** Player id the last event is attributed to (undefined for round/system events).
+   *  The turn may already have advanced, so this — not `currentPlayerId` — names the
+   *  actor for UI messages/animations. */
+  lastActorId?: string
+  /** The two slots involved in the most recent swap, for a client cross-table
+   *  animation. Only the positions are shared (never the card identities), and it is
+   *  present only on the state produced by that swap. */
+  lastSwap?: { aId: string; aPos: number; bId: string; bPos: number }
 }
 
 export type ActionErrorCode = 'NOT_YOUR_TURN' | 'INVALID_ACTION' | 'GAME_OVER'
@@ -113,6 +121,14 @@ export type ActionResult =
 
 function fail(code: ActionErrorCode, message: string): ActionResult {
   return { ok: false, code, message }
+}
+
+/** Record the last event message and the player it is attributed to. Clears any
+ *  transient per-event metadata (e.g. `lastSwap`) so it only rides its own event. */
+function setEvent(state: BeverbendeState, actorId: string | undefined, text: string): void {
+  state.lastEvent = text
+  state.lastActorId = actorId
+  state.lastSwap = undefined
 }
 
 /** Deep clone so reducers never mutate their input (keeps them pure). */
@@ -310,11 +326,11 @@ function scoreRound(state: BeverbendeState, now: number, rng: () => number): voi
     state.status = 'finished'
     state.winnerIds = computeWinners(state)
     state.deadline = now
-    state.lastEvent = 'Final round scored.'
+    setEvent(state, undefined, 'Final round scored.')
   } else {
     state.status = 'roundOver'
     state.deadline = now + ROUND_OVER_MS
-    state.lastEvent = `Round ${state.round} scored.`
+    setEvent(state, undefined, `Round ${state.round} scored.`)
   }
 }
 
@@ -385,7 +401,7 @@ export function takeDiscard(
   p.cards[position] = taken
   p.known[position] = true // the taken card was face-up and public
   next.discardPile.push(old)
-  next.lastEvent = 'took a card from the discard pile.'
+  setEvent(next, playerId, 'took a card from the discard pile.')
   endTurn(next, now, rng)
   return { ok: true, state: next }
 }
@@ -409,7 +425,7 @@ export function drawFromPile(
     return { ok: true, state: next }
   }
   next.pending = { kind: 'decide', card }
-  next.lastEvent = 'drew from the draw pile.'
+  setEvent(next, playerId, 'drew from the draw pile.')
   return { ok: true, state: next }
 }
 
@@ -437,7 +453,7 @@ export function knock(
   // endTurn (below) decrements once for the knocker's own turn, so start at N: that
   // leaves exactly N-1 decrements — one per remaining player — before scoring.
   next.finalTurnsLeft = next.playerOrder.length
-  next.lastEvent = 'knocked — last round!'
+  setEvent(next, playerId, 'knocked — last round!')
   endTurn(next, now, rng)
   return { ok: true, state: next }
 }
@@ -466,7 +482,7 @@ export function replaceWithDrawn(
   p.cards[position] = pending.card
   p.known[position] = true // you saw the drawn card you placed
   next.discardPile.push(old)
-  next.lastEvent = 'swapped a drawn card into their row.'
+  setEvent(next, playerId, 'swapped a drawn card into their row.')
   endTurn(next, now, rng)
   return { ok: true, state: next }
 }
@@ -501,11 +517,11 @@ export function discardDrawn(
       return { ok: true, state: next }
     }
     next.pending = { kind: 'decide', card: second, drawTwoStage: 2 }
-    next.lastEvent = 'declined the first card and drew a second.'
+    setEvent(next, playerId, 'declined the first card and drew a second.')
     return { ok: true, state: next }
   }
 
-  next.lastEvent = 'discarded a drawn card.'
+  setEvent(next, playerId, 'discarded a drawn card.')
   endTurn(next, now, rng)
   return { ok: true, state: next }
 }
@@ -534,11 +550,11 @@ export function useSpecial(
   switch (card.type) {
     case 'peek':
       next.pending = { kind: 'peek' }
-      next.lastEvent = 'is peeking at one of their cards.'
+      setEvent(next, playerId, 'is peeking at one of their cards.')
       return { ok: true, state: next }
     case 'swap':
       next.pending = { kind: 'swap' }
-      next.lastEvent = 'is swapping a card.'
+      setEvent(next, playerId, 'is swapping a card.')
       return { ok: true, state: next }
     case 'drawTwo': {
       const first = drawCard(next, rng)
@@ -548,7 +564,7 @@ export function useSpecial(
         return { ok: true, state: next }
       }
       next.pending = { kind: 'decide', card: first, drawTwoStage: 1 }
-      next.lastEvent = 'played Draw Two.'
+      setEvent(next, playerId, 'played Draw Two.')
       return { ok: true, state: next }
     }
     default:
@@ -573,7 +589,7 @@ export function peekAt(
 
   const next = clone(state)
   next.players[playerId].known[position] = true // the card stays; owner now knows it
-  next.lastEvent = 'peeked at one of their cards.'
+  setEvent(next, playerId, 'peeked at one of their cards.')
   endTurn(next, now, rng)
   return { ok: true, state: next }
 }
@@ -615,7 +631,8 @@ export function swapCards(
   // Positional knowledge resets: neither owner automatically knows the new card.
   me.known[ownPosition] = false
   them.known[targetPosition] = false
-  next.lastEvent = 'swapped a card with an opponent.'
+  setEvent(next, playerId, 'swapped a card with an opponent.')
+  next.lastSwap = { aId: playerId, aPos: ownPosition, bId: targetId, bPos: targetPosition }
   endTurn(next, now, rng)
   return { ok: true, state: next }
 }
@@ -657,7 +674,7 @@ export function tick(
         next.discardPile.push(next.pending.card)
       }
       next.pending = null
-      next.lastEvent = 'ran out of time.'
+      setEvent(next, next.currentPlayerId, 'ran out of time.')
       endTurn(next, now, rng)
       return next
     }
@@ -719,7 +736,7 @@ export function removePlayerFromGame(
     next.winnerIds = next.playerOrder.slice()
     next.currentPlayerId = next.playerOrder[0]
     next.pending = null
-    next.lastEvent = 'wins — everyone else left.'
+    setEvent(next, next.playerOrder[0], 'wins — everyone else left.')
     return next
   }
 
