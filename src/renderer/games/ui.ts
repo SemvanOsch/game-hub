@@ -22,6 +22,12 @@ import { UnoGame } from './uno/UnoGame'
 import { UnoResult } from './uno/UnoResult'
 import { ZipGame } from './zip/ZipGame'
 import { ZipResult } from './zip/ZipResult'
+import { QueensGame } from './queens/QueensGame'
+import { QueensResult } from './queens/QueensResult'
+import { SkipBoGame } from './skipbo/SkipBoGame'
+import { SkipBoResult } from './skipbo/SkipBoResult'
+import { BeverbendeGame } from './beverbende/BeverbendeGame'
+import { BeverbendeResult } from './beverbende/BeverbendeResult'
 
 /** Props passed to a game's in-progress screen. */
 export interface GameUIProps {
@@ -58,7 +64,10 @@ const GAME_UI: Record<string, GameUI> = {
   connect4: { Game: Connect4Game, GameOver: Connect4Result },
   poker: { Game: PokerGame, GameOver: PokerResult },
   uno: { Game: UnoGame, GameOver: UnoResult },
-  zip: { Game: ZipGame, GameOver: ZipResult }
+  zip: { Game: ZipGame, GameOver: ZipResult },
+  queens: { Game: QueensGame, GameOver: QueensResult },
+  skipbo: { Game: SkipBoGame, GameOver: SkipBoResult },
+  beverbende: { Game: BeverbendeGame, GameOver: BeverbendeResult }
 }
 
 export function getGameUI(gameId: string): GameUI | undefined {

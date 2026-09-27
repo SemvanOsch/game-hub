@@ -1,0 +1,425 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  min-height: 100%;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* --- Header --------------------------------------------------------------- */
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.leave {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+.leave:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.rules {
+  color: var(--text-faint);
+  font-size: 0.85rem;
+}
+
+/* --- Opponents ------------------------------------------------------------ */
+.opponents {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.seat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+  min-width: 150px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.seatTurn {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 18px var(--glow);
+}
+.seatHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+}
+.seatName {
+  font-weight: 600;
+  color: var(--text);
+}
+.offline {
+  color: var(--danger);
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+.seatScore {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+.seatTurnTag,
+.seatKnock {
+  font-size: 0.68rem;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+}
+.seatTurnTag {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.seatKnock {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.seatCards {
+  display: flex;
+  gap: 5px;
+}
+.seatCardBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.seatCardBtn:hover {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* --- Centre piles --------------------------------------------------------- */
+.tableWrap {
+  display: flex;
+  gap: var(--space-6);
+  justify-content: center;
+  align-items: flex-start;
+  padding: var(--space-3) 0;
+}
+.pileArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.pile {
+  position: relative;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: default;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pileHot {
+  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--success), 0 0 16px rgba(67, 197, 158, 0.35);
+}
+.pileEmpty {
+  width: 62px;
+  height: 87px;
+  border: 2px dashed var(--border-strong);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-faint);
+  font-size: 0.8rem;
+}
+.pileCount {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  padding: 1px 7px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.pileLabel {
+  color: var(--text-faint);
+  font-size: 0.78rem;
+}
+
+/* --- Status banner -------------------------------------------------------- */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-4);
+}
+.bannerMsg {
+  font-weight: 600;
+  color: var(--text);
+}
+.finalTag {
+  font-size: 0.78rem;
+  color: var(--danger);
+  font-weight: 700;
+}
+.lastEvent {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+.timer {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+.timerLow {
+  color: var(--danger);
+}
+
+/* --- Pending panel -------------------------------------------------------- */
+.pendingPanel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  justify-content: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+}
+.pendingCardWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.pendingLabel {
+  font-size: 0.76rem;
+  color: var(--text-faint);
+}
+.pendingActions {
+  display: flex;
+  gap: var(--space-2);
+}
+.pendingHint {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+/* --- Self area ------------------------------------------------------------ */
+.self {
+  margin-top: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.selfActive {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 26px var(--glow);
+}
+/* During the reveal phase, lift the player's own area above the blur overlay so
+   their cards stay crisp while the rest of the table is blurred behind. */
+.selfRaised {
+  position: relative;
+  z-index: 20;
+}
+.selfHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+.selfName {
+  font-weight: 700;
+  color: var(--text);
+}
+.selfScore {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.selfCards {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+}
+.selfCardCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.hiddenCard {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 12px;
+  position: relative;
+}
+.hiddenCard:hover,
+.hiddenSel {
+  box-shadow: 0 0 0 3px var(--accent);
+  border-radius: 12px;
+}
+/* A card the player has learned (value hidden — a memory aid, not a leak). */
+.knownCard {
+  box-shadow: 0 0 0 2px var(--success);
+  border-radius: 12px;
+}
+.knownDot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success);
+}
+.posLabel {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+}
+.controls {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.peekHint {
+  color: var(--success);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* --- Overlays ------------------------------------------------------------- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 8, 12, 0.72);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: inherit;
+}
+
+/* Reveal: the background (opponents, piles) is slightly blurred, while the panel
+   and the player's own card area (raised above via .selfRaised) stay sharp so the
+   two outer cards can be read clearly. */
+.revealOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: var(--space-5);
+  z-index: 10;
+  pointer-events: none;
+  background: rgba(6, 8, 12, 0.25);
+  backdrop-filter: blur(3px);
+}
+.revealOverlay .overlayPanel {
+  pointer-events: auto;
+}
+.overlayPanel {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-5);
+  max-width: 460px;
+  width: min(92%, 460px);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: center;
+}
+.overlayTitle {
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--text);
+}
+.overlayText {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.overlayFine {
+  margin: 0;
+  color: var(--text-faint);
+  font-size: 0.8rem;
+}
+
+/* --- Scoreboard ----------------------------------------------------------- */
+.scoreTable {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.scoreHead,
+.scoreRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--space-4);
+  padding: 6px 10px;
+  align-items: center;
+}
+.scoreHead {
+  color: var(--text-faint);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.scoreRow {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+.scoreRow > span:nth-child(2) {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.scoreTotal {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .tableWrap {
+    gap: var(--space-4);
+  }
+  .selfCards {
+    gap: var(--space-2);
+  }
+}

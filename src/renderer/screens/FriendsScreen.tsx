@@ -40,6 +40,10 @@ export function FriendsScreen({ onBack }: FriendsScreenProps) {
     setUsername('')
   }
 
+  // Show online friends first, then keep the server's alphabetical order.
+  const sortedFriends = [...friends].sort((a, b) => Number(b.online) - Number(a.online))
+  const onlineCount = friends.filter((f) => f.online).length
+
   return (
     <div className={styles.screen}>
       <div className={styles.panel}>
@@ -92,6 +96,12 @@ export function FriendsScreen({ onBack }: FriendsScreenProps) {
         <section className={styles.section}>
           <h3 className={styles.sectionTitle}>
             Your friends <span className={styles.count}>{friends.length}</span>
+            {onlineCount > 0 ? (
+              <span className={styles.onlineCount}>
+                <span className={styles.dotOnline} />
+                {onlineCount} online
+              </span>
+            ) : null}
           </h3>
           {friends.length === 0 ? (
             <p className={styles.empty}>
@@ -99,7 +109,7 @@ export function FriendsScreen({ onBack }: FriendsScreenProps) {
             </p>
           ) : (
             <ul className={styles.list}>
-              {friends.map((friend) => (
+              {sortedFriends.map((friend) => (
                 <FriendRow
                   key={friend.userId}
                   friend={friend}
@@ -158,7 +168,12 @@ function FriendRow({
             title={friend.online ? 'Online' : 'Offline'}
           />
         </span>
-        <span className={styles.name}>{friend.username}</span>
+        <span className={styles.nameCol}>
+          <span className={styles.name}>{friend.username}</span>
+          <span className={friend.online ? styles.statusOnline : styles.statusOffline}>
+            {friend.online ? 'Online' : 'Offline'}
+          </span>
+        </span>
         {played ? (
           <span
             className={styles.scoreBadge}

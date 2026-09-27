@@ -1,0 +1,150 @@
+/* Beverbende card — CSS/SVG only, no artwork. Sizes mirror the Skip-Bo scale. */
+.card {
+  --bv-w: 62px;
+  width: var(--bv-w);
+  height: calc(var(--bv-w) * 1.4);
+  border-radius: 10px;
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  user-select: none;
+  font-family: var(--font);
+  border: 1.5px solid rgba(0, 0, 0, 0.35);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.xs {
+  --bv-w: 34px;
+  border-radius: 6px;
+}
+.sm {
+  --bv-w: 46px;
+  border-radius: 8px;
+}
+.md {
+  --bv-w: 62px;
+}
+.lg {
+  --bv-w: 82px;
+  border-radius: 12px;
+}
+
+/* --- Face-down back ------------------------------------------------------- */
+.back {
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 6px, transparent 6px 12px),
+    linear-gradient(160deg, #2a3550, #171d2e);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.backMark {
+  width: 44%;
+  height: 44%;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  background: radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.18), transparent 60%);
+}
+
+/* --- Number faces (hue-banded) ------------------------------------------- */
+.face {
+  color: #fff;
+  font-weight: 800;
+}
+.good {
+  background: linear-gradient(160deg, #2fb59a, #1c7d6c);
+}
+.mid {
+  background: linear-gradient(160deg, #4b7be0, #2f52a8);
+}
+.high {
+  background: linear-gradient(160deg, #e0993a, #b06d1e);
+}
+.bad {
+  background: linear-gradient(160deg, #e05a5a, #a83232);
+}
+
+.centre {
+  font-size: calc(var(--bv-w) * 0.64);
+  line-height: 1;
+  font-weight: 900;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.corner {
+  position: absolute;
+  font-size: calc(var(--bv-w) * 0.24);
+  font-weight: 800;
+  opacity: 0.92;
+}
+.tl {
+  top: 5%;
+  left: 8%;
+}
+.br {
+  bottom: 5%;
+  right: 8%;
+  transform: rotate(180deg);
+}
+.xs .corner,
+.sm .corner {
+  display: none;
+}
+
+/* --- Power (special) faces ----------------------------------------------- */
+.special {
+  flex-direction: column;
+  gap: 4px;
+  color: #fff;
+}
+.peek {
+  background: linear-gradient(160deg, #2bb2c7, #16788a);
+}
+.swap {
+  background: linear-gradient(160deg, #8a72e6, #5a44b8);
+}
+.drawTwo {
+  background: linear-gradient(160deg, #e6b23e, #b9861f);
+  color: #241a05;
+}
+.glyph {
+  width: calc(var(--bv-w) * 0.5);
+  height: calc(var(--bv-w) * 0.5);
+}
+.specialName {
+  font-size: calc(var(--bv-w) * 0.15);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+.xs .specialName {
+  display: none;
+}
+
+/* --- Interactive states --------------------------------------------------- */
+.interactive {
+  cursor: pointer;
+  padding: 0;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    filter 0.12s ease;
+}
+.interactive:hover:not(.disabled) {
+  transform: translateY(-4px);
+}
+.playable {
+  box-shadow:
+    0 0 0 2px var(--success),
+    0 4px 10px rgba(0, 0, 0, 0.35);
+}
+.selected {
+  box-shadow:
+    0 0 0 3px var(--accent),
+    0 6px 14px rgba(0, 0, 0, 0.4);
+  transform: translateY(-6px);
+}
+.disabled {
+  opacity: 0.45;
+  filter: grayscale(0.3);
+  cursor: default;
+}

@@ -1,0 +1,191 @@
+/* Designed Skip-Bo card. Number cards are hue-coded by value; wilds use a gold
+ * face. Cards carry their own colour identity so they read on the dark table. */
+.card {
+  --sb-w: 68px;
+  --sb-radius: calc(var(--sb-w) * 0.14);
+  width: var(--sb-w);
+  aspect-ratio: 5 / 7.2;
+  border-radius: var(--sb-radius);
+  position: relative;
+  flex: 0 0 auto;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.15) inset;
+  user-select: none;
+  padding: 0;
+  border: none;
+}
+
+.xs {
+  --sb-w: 34px;
+}
+.sm {
+  --sb-w: 48px;
+}
+.md {
+  --sb-w: 68px;
+}
+.lg {
+  --sb-w: 96px;
+}
+
+.face {
+  display: block;
+  color: #fff;
+}
+
+/* Number cards use the official Skip-Bo colour bands (set by .blue/.green/.red). */
+.number {
+  background: linear-gradient(160deg, var(--sb-body, #2f5cad), var(--sb-body-dark, #1e3f80));
+}
+/* 1–4: dark blue. */
+.blue {
+  --sb-body: #2f5cad;
+  --sb-body-dark: #1d3c7c;
+}
+/* 5–8: green. */
+.green {
+  --sb-body: #3a9d4e;
+  --sb-body-dark: #297a3a;
+}
+/* 9–12: red. */
+.red {
+  --sb-body: #d0393d;
+  --sb-body-dark: #a52a2e;
+}
+.number .centre {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--sb-w) * 0.66);
+  font-weight: 900;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+  letter-spacing: -0.04em;
+}
+
+/* Skip-Bo wild face. */
+.wild {
+  background: linear-gradient(150deg, #f7d774, #d99b2b 55%, #9c6412);
+  color: #2a1c05;
+}
+.wildText {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--sb-w) * 0.2);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #2a1c05;
+  text-align: center;
+  transform: rotate(-14deg);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.wildAs {
+  font-size: calc(var(--sb-w) * 0.6);
+  letter-spacing: -0.04em;
+}
+.wildTag {
+  position: absolute;
+  bottom: calc(var(--sb-w) * 0.06);
+  left: calc(var(--sb-w) * 0.1);
+  font-size: calc(var(--sb-w) * 0.16);
+  font-weight: 900;
+  color: rgba(42, 28, 5, 0.8);
+}
+
+/* Corner indices. */
+.corner {
+  position: absolute;
+  font-size: calc(var(--sb-w) * 0.24);
+  font-weight: 800;
+  line-height: 1;
+  z-index: 2;
+  color: inherit;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+}
+.number .corner {
+  color: #fff;
+}
+.tl {
+  top: calc(var(--sb-w) * 0.08);
+  left: calc(var(--sb-w) * 0.11);
+}
+.br {
+  bottom: calc(var(--sb-w) * 0.08);
+  right: calc(var(--sb-w) * 0.11);
+  transform: rotate(180deg);
+}
+
+/* Patterned back for stock / draw pile / opponent hands. */
+.back {
+  background: repeating-linear-gradient(45deg, #1f2430, #1f2430 6px, #171b24 6px, #171b24 12px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.2) inset;
+}
+.back::after {
+  content: 'SB';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: calc(var(--sb-w) * 0.3);
+  color: #d99b2b;
+  transform: rotate(-16deg);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* Interaction states. */
+.interactive {
+  cursor: pointer;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+.playable {
+  outline: 2px solid var(--success);
+  outline-offset: -1px;
+}
+.interactive:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.5);
+  z-index: 5;
+}
+.selected {
+  outline: 3px solid var(--accent);
+  outline-offset: -1px;
+  transform: translateY(-12px);
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.55);
+  z-index: 6;
+}
+.disabled {
+  filter: brightness(0.55) saturate(0.7);
+  cursor: default;
+}
+
+.dealIn {
+  animation: sb-deal 0.4s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+}
+@keyframes sb-deal {
+  from {
+    opacity: 0;
+    transform: translateY(-22px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dealIn {
+    animation: none;
+  }
+  .interactive:hover,
+  .selected {
+    transform: none;
+  }
+}

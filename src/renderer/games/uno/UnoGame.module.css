@@ -263,8 +263,11 @@
   padding: var(--space-3) 0 var(--space-4);
   min-height: 120px;
 }
+/* Overlap the cards only slightly — less than the corner index's inset (~10% of
+ * the card width) so a card's number/icon never paints over its neighbour, while
+ * still reading as a held hand rather than a plain grid. */
 .handCard {
-  margin: 0 -14px;
+  margin: 0 -4px;
 }
 .handCard:first-child {
   margin-left: 0;
@@ -343,6 +346,6 @@
     padding: var(--space-4) var(--space-2);
   }
   .handCard {
-    margin: 0 -18px;
+    margin: 0 -10px;
   }
 }

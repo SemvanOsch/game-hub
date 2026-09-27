@@ -14,6 +14,7 @@ The app currently includes:
 * Rummikub
 * Connect 4
 * Poker / Texas Hold'em
+* Skip-Bo
 
 More games may be added in the future.
 
@@ -158,6 +159,41 @@ When I ask for a new game or feature, first consider:
 7. What tests are needed.
 
 The implementation should feel like a natural part of the existing application.
+
+## Skip-Bo
+
+When implementing **Skip-Bo**, treat it as a complete multiplayer card game rather than a simplified card-game prototype.
+
+Skip-Bo should generally support:
+
+* 2–4 players
+* A standard Skip-Bo deck containing number cards 1–12 and Skip-Bo wild cards
+* A personal stockpile for each player
+* A hand for each player
+* Four personal discard piles per player
+* Four shared building piles
+* Turn-based play
+* Drawing to maintain the normal hand size
+* Playing cards from the hand, the player's stockpile, or the top of their discard piles
+* Multiple plays during a turn
+* A required discard to end the turn
+* Skip-Bo wild-card behaviour
+* Automatic completion/clearing of building piles when they reach 12
+* Appropriate draw-pile recycling using completed building piles
+* Winning when a player empties their stockpile
+
+Important Skip-Bo implementation requirements:
+
+* The server/host must be authoritative over the deck, shuffle, dealing, hidden cards, turns, legal moves, building piles, discard piles, stockpiles, and win conditions.
+* Opponents must not receive hidden hand/stockpile card information merely because the client does not display it.
+* Clients may provide legal-move highlighting and other UI feedback, but the server must independently validate every action.
+* Use explicit game actions/commands where the existing GameHub architecture supports them rather than allowing arbitrary client-side state mutation.
+* Prevent duplicate actions, out-of-turn actions, stale actions, actions after game over, and race conditions.
+* Keep Skip-Bo rules in a testable game/rules layer rather than scattering them throughout UI components.
+* Reuse existing GameHub card components, room/multiplayer infrastructure, turn handling, disconnect/reconnect behaviour, animations, sounds, results screens, and rematch systems where appropriate.
+* Do not create a separate networking, account, room, or authentication system for Skip-Bo.
+* Test deck composition, dealing, legal/illegal building-pile plays, Skip-Bo wild cards, discard piles, multiple plays per turn, turn transitions, draw-pile recycling, stockpile victory, hidden-information protection, duplicate actions, disconnect/reconnect behaviour, and multiplayer synchronization.
+* If a Skip-Bo rule requires a deliberate simplification because of the existing architecture, document the simplification rather than silently inventing a different rule.
 
 ## Important Preference
 

@@ -14,6 +14,9 @@ import { connect4Engine } from '../connect4/game'
 import { pokerEngine } from '../poker/game'
 import { unoEngine } from '../uno/game'
 import { zipEngine } from '../zip/game'
+import { queensEngine } from '../queens/game'
+import { skipBoEngine } from '../skipbo/game'
+import { beverbendeEngine } from '../beverbende/game'
 
 const ENGINES: Record<string, GameEngine> = {
   [yahtzeeEngine.id]: yahtzeeEngine,
@@ -23,7 +26,10 @@ const ENGINES: Record<string, GameEngine> = {
   [connect4Engine.id]: connect4Engine,
   [pokerEngine.id]: pokerEngine,
   [unoEngine.id]: unoEngine,
-  [zipEngine.id]: zipEngine
+  [zipEngine.id]: zipEngine,
+  [queensEngine.id]: queensEngine,
+  [skipBoEngine.id]: skipBoEngine,
+  [beverbendeEngine.id]: beverbendeEngine
 }
 
 export function getEngine(id: string): GameEngine | undefined {

@@ -1,0 +1,82 @@
+.board {
+  width: 100%;
+  max-width: 440px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  touch-action: manipulation;
+  user-select: none;
+}
+.board.interactive {
+  cursor: pointer;
+}
+.board.locked {
+  opacity: 0.85;
+}
+
+.bg {
+  fill: var(--surface);
+  stroke: var(--border-strong);
+  stroke-width: 2;
+}
+
+/* Hover highlight: a crisp inset outline drawn on top of the cell. We avoid CSS
+ * filters here — applying `filter` to an SVG element rasterizes it onto its own
+ * layer, which visibly softens/blurs the board as the hovered cell changes. */
+.hoverRing {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 3;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.gridline {
+  stroke: rgba(0, 0, 0, 0.28);
+  stroke-width: 1;
+}
+
+.regionEdge {
+  stroke: #12151b;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+/* X annotation (local hint) */
+.mark line {
+  stroke: rgba(15, 18, 24, 0.7);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+/* Queen glyph */
+.queenFill {
+  fill: #14171d;
+  stroke: #14171d;
+  stroke-width: 1.5;
+}
+.queenGem {
+  fill: #14171d;
+}
+.queen {
+  animation: queen-pop 0.16s ease;
+}
+.queenFill,
+.queenGem {
+  transition: fill 0.12s ease;
+}
+.queenBad .queenFill,
+.queenBad .queenGem {
+  fill: var(--danger);
+  stroke: var(--danger);
+}
+/* Animate opacity only — the group's translate is an SVG attribute we must not
+ * override with a CSS transform. */
+@keyframes queen-pop {
+  from {
+    opacity: 0.2;
+  }
+  to {
+    opacity: 1;
+  }
+}

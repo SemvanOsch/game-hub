@@ -18,6 +18,10 @@ export function LobbyScreen({ room, selfId, isHost, onStart, onLeave }: LobbyScr
   const [endAtTarget, setEndAtTarget] = useState(true)
   // UNO lets the host toggle Draw Two / Wild Draw Four stacking (default: off).
   const [unoStacking, setUnoStacking] = useState(false)
+  // Skip-Bo lets the host pick match length (default: long / standard stockpiles).
+  const [skipBoLong, setSkipBoLong] = useState(true)
+  // Beverbende lets the host pick the number of rounds (2–6, default 5 / box standard).
+  const [beverbendeRounds, setBeverbendeRounds] = useState(5)
   const session = useAuthStore((s) => s.session)
   const friends = useAuthStore((s) => s.friends)
   const inviteToRoom = useAuthStore((s) => s.inviteToRoom)
@@ -31,13 +35,19 @@ export function LobbyScreen({ room, selfId, isHost, onStart, onLeave }: LobbyScr
 
   const showBlackjackRule = room.gameId === 'blackjack' && isHost
   const showUnoRule = room.gameId === 'uno' && isHost
+  const showSkipBoRule = room.gameId === 'skipbo' && isHost
+  const showBeverbendeRule = room.gameId === 'beverbende' && isHost
   const start = () => {
     const options =
       room.gameId === 'blackjack'
         ? { endMode: endAtTarget ? 'target' : 'survivor' }
         : room.gameId === 'uno'
           ? { stacking: unoStacking }
-          : undefined
+          : room.gameId === 'skipbo'
+            ? { gameLength: skipBoLong ? 'long' : 'short' }
+            : room.gameId === 'beverbende'
+              ? { rounds: beverbendeRounds }
+              : undefined
     onStart(options)
   }
 
@@ -181,6 +191,61 @@ export function LobbyScreen({ room, selfId, isHost, onStart, onLeave }: LobbyScr
               >
                 On
               </button>
+            </div>
+          </div>
+        ) : null}
+
+        {showSkipBoRule ? (
+          <div className={styles.option}>
+            <div className={styles.optionText}>
+              <span className={styles.optionLabel}>Game length</span>
+              <span className={styles.optionHint}>
+                {skipBoLong
+                  ? 'Long — 30 stock cards each (20 with 5–6 players)'
+                  : 'Short — 20 stock cards each (15 with 5–6 players)'}
+              </span>
+            </div>
+            <div className={styles.segmented} role="group" aria-label="Game length">
+              <button
+                type="button"
+                className={skipBoLong ? styles.segActive : ''}
+                aria-pressed={skipBoLong}
+                onClick={() => setSkipBoLong(true)}
+              >
+                Long
+              </button>
+              <button
+                type="button"
+                className={!skipBoLong ? styles.segActive : ''}
+                aria-pressed={!skipBoLong}
+                onClick={() => setSkipBoLong(false)}
+              >
+                Short
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {showBeverbendeRule ? (
+          <div className={styles.option}>
+            <div className={styles.optionText}>
+              <span className={styles.optionLabel}>Rounds</span>
+              <span className={styles.optionHint}>
+                Play {beverbendeRounds} rounds — lowest total score wins
+              </span>
+            </div>
+            <div className={styles.segmented} role="group" aria-label="Number of rounds">
+              {[2, 3, 4, 5, 6].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  className={beverbendeRounds === n ? styles.segActive : ''}
+                  aria-pressed={beverbendeRounds === n}
+                  onClick={() => setBeverbendeRounds(n)}
+                >
+                  {n}
+                </button>
+              ))}
             </div>
           </div>
         ) : null}

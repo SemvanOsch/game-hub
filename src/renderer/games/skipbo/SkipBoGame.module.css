@@ -1,0 +1,495 @@
+.screen {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-5) var(--space-4);
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+  flex-wrap: wrap;
+}
+.leave {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+}
+.leave:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.rules {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* ---- Opponents ---------------------------------------------------------- */
+.opponents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: center;
+  margin-bottom: var(--space-2);
+}
+.seat {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+  min-width: 148px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.seatTurn {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 18px var(--glow);
+}
+.seatHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: 4px;
+}
+.seatName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+.offline {
+  color: var(--text-faint);
+  font-weight: 500;
+}
+.seatTurnTag {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-radius: var(--radius-pill);
+  padding: 2px 7px;
+}
+.seatBody {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+.seatStock,
+.seatHand {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  position: relative;
+}
+.seatStock {
+  flex-direction: column;
+  gap: 2px;
+}
+.seatStockCount,
+.seatStockEmpty {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.seatBack {
+  margin-left: -14px;
+}
+.seatBack:first-child {
+  margin-left: 0;
+}
+.seatEmpty,
+.seatDiscEmpty {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.seatDiscards {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+.seatDiscEmpty {
+  width: 34px;
+  aspect-ratio: 5 / 7.2;
+  border: 1px dashed var(--border-strong);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- Table: draw pile + building piles ---------------------------------- */
+.tableWrap {
+  background: radial-gradient(circle at 50% 0%, var(--surface), var(--bg-2));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+.tableRow {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+/* Draw pile — a small stack of card backs the hand is dealt from. */
+.drawArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-right: var(--space-4);
+  border-right: 1px solid var(--border);
+}
+.drawPile {
+  position: relative;
+  width: 68px;
+  aspect-ratio: 5 / 7.2;
+}
+.drawBackTop,
+.drawBack2,
+.drawBack3 {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.drawBackTop {
+  z-index: 3;
+}
+.drawBack2 {
+  z-index: 2;
+  transform: translate(3px, 3px);
+  filter: brightness(0.85);
+}
+.drawBack3 {
+  z-index: 1;
+  transform: translate(6px, 6px);
+  filter: brightness(0.7);
+}
+.drawCount {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 1px 8px;
+}
+.drawEmpty {
+  width: 68px;
+  aspect-ratio: 5 / 7.2;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-faint);
+  font-size: 12px;
+}
+.drawLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-faint);
+  margin-top: 4px;
+}
+
+.buildingRow {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.building {
+  position: relative;
+  background: transparent;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius);
+  padding: 5px;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+.buildingLegal {
+  border-color: var(--success);
+  box-shadow: 0 0 0 1px var(--success), 0 0 20px rgba(67, 197, 158, 0.28);
+  cursor: pointer;
+}
+.buildingLegal:hover {
+  transform: translateY(-3px);
+}
+.buildingDim {
+  opacity: 0.4;
+}
+.buildingEmpty {
+  width: 68px;
+  aspect-ratio: 5 / 7.2;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+}
+.buildingNeed {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-faint);
+}
+.buildingCount {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+/* ---- Banner / timer ----------------------------------------------------- */
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 5px var(--space-3);
+  margin: 0 auto var(--space-2);
+  max-width: 900px;
+  flex-wrap: wrap;
+}
+.turnBadge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-dim);
+  background: var(--surface-3);
+  border-radius: var(--radius-pill);
+  padding: 2px 9px;
+}
+.bannerMsg {
+  color: var(--text);
+}
+.lastEvent {
+  color: var(--text-faint);
+  font-weight: 500;
+}
+.timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  color: var(--text-dim);
+  background: var(--surface-3);
+  border-radius: var(--radius-pill);
+  padding: 2px 10px;
+  flex: 0 0 auto;
+}
+.timerLow {
+  color: #fff;
+  background: var(--danger);
+  animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* ---- Self area ---------------------------------------------------------- */
+.self {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.selfActive {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 26px var(--glow);
+}
+.selfTop {
+  display: flex;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-bottom: var(--space-3);
+}
+.areaLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+  margin-bottom: 4px;
+}
+.stockArea {
+  flex: 0 0 auto;
+}
+.stockCard {
+  position: relative;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.stockCard:disabled {
+  cursor: default;
+}
+.stockHot > :first-child {
+  outline: 2px solid var(--success);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+.stockEmpty {
+  width: 68px;
+  aspect-ratio: 5 / 7.2;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-faint);
+  font-size: 20px;
+}
+.stockCount {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.discardArea {
+  flex: 1 1 300px;
+}
+.discardRow {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.discardPile {
+  position: relative;
+  background: rgba(255, 255, 255, 0.02);
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius);
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 52px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+.discardPile:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.discardDrop {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 16px var(--glow);
+}
+.discardDrop:hover {
+  transform: translateY(-3px);
+}
+.discardSel {
+  border-color: var(--accent);
+}
+.discardEmpty {
+  width: 48px;
+  aspect-ratio: 5 / 7.2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-faint);
+  font-size: 16px;
+  font-weight: 700;
+}
+.discardCount {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+/* ---- Hand --------------------------------------------------------------- */
+.handArea {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-2);
+}
+.hand {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.handCardWrap {
+  display: inline-flex;
+}
+.handCard {
+  margin: 0;
+}
+.handEmpty {
+  color: var(--text-faint);
+  font-size: 13px;
+}
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+.hint {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* ---- Responsive --------------------------------------------------------- */
+@media (max-width: 720px) {
+  .selfTop {
+    gap: var(--space-3);
+  }
+  .buildingRow {
+    gap: var(--space-2);
+  }
+  .rules {
+    display: none;
+  }
+  .drawArea {
+    border-right: none;
+    padding-right: 0;
+  }
+}

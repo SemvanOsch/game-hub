@@ -9,6 +9,9 @@ import { Connect4Icon } from './connect4/Connect4Icon'
 import { PokerIcon } from './poker/PokerIcon'
 import { UnoIcon } from './uno/UnoIcon'
 import { ZipIcon } from './zip/ZipIcon'
+import { QueensIcon } from './queens/QueensIcon'
+import { SkipBoIcon } from './skipbo/SkipBoIcon'
+import { BeverbendeIcon } from './beverbende/BeverbendeIcon'
 
 export interface GameDefinition {
   id: string
@@ -96,9 +99,39 @@ export const GAMES: GameDefinition[] = [
   },
   {
     id: 'zip',
-    name: 'Zip Battle Royale',
+    name: 'Zip',
     icon: '',
     Icon: ZipIcon,
+    multiplayer: true,
+    minPlayers: 2,
+    maxPlayers: 6,
+    available: true
+  },
+  {
+    id: 'queens',
+    name: 'Queens',
+    icon: '',
+    Icon: QueensIcon,
+    multiplayer: true,
+    minPlayers: 2,
+    maxPlayers: 6,
+    available: true
+  },
+  {
+    id: 'skipbo',
+    name: 'Skip-Bo',
+    icon: '',
+    Icon: SkipBoIcon,
+    multiplayer: true,
+    minPlayers: 2,
+    maxPlayers: 6,
+    available: true
+  },
+  {
+    id: 'beverbende',
+    name: 'Beverbende',
+    icon: '',
+    Icon: BeverbendeIcon,
     multiplayer: true,
     minPlayers: 2,
     maxPlayers: 6,
